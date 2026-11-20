@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SkillTree · 个人技能树工作台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#0A0B0D;
+  --bg-2:#0D0E11;
+  --surface:#121316;
+  --surface-2:#181A1E;
+  --border:#262A31;
+  --border-soft:#1D2025;
+  --text:#FBFBFB;
+  --muted:#B8BCC4;
+  --faint:#69707A;
+  --accent:#D3FD50;
+  --accent-dim:rgba(211,253,80,.14);
+  --danger:#D85C46;
+  --pass:#5FA8C7;
+  --warn:#D9A24A;
+  --r-sm:8px; --r-md:12px; --r-lg:16px;
+  --font-display:"Space Grotesk","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Noto Sans KR","Noto Sans",sans-serif;
+  --font-mono:"Space Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --sidebar-w:250px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-display);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+::selection{background:var(--accent);color:#000}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:rgba(211,253,80,.45)}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,textarea,select{font-family:inherit;color:var(--text)}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+/* ============ SHELL ============ */
+#app{display:flex;height:100dvh;width:100vw}
+
+/* ============ SIDEBAR ============ */
+.sidebar{
+  width:var(--sidebar-w);flex:0 0 var(--sidebar-w);
+  background:var(--bg-2);
+  border-right:1px solid var(--border-soft);
+  display:flex;flex-direction:column;
+  z-index:30;
+}
+.brand{display:flex;align-items:center;gap:12px;padding:20px 18px 16px;border-bottom:1px solid var(--border-soft)}
+.brand-logo{width:42px;height:42px;flex:0 0 42px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#000}
+.brand-logo svg{width:100%;height:100%;display:block}
+.brand-name{font-weight:700;font-size:17px;letter-spacing:-.01em;line-height:1.2}
+.brand-tag{font-family:var(--font-mono);font-size:10px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase}
+.nav{display:flex;flex-direction:column;gap:2px;padding:14px 10px}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 12px;border-radius:var(--r-md);
+  color:var(--muted);font-size:14.5px;font-weight:500;
+  transition:background .18s var(--ease),color .18s var(--ease),transform .18s var(--ease);
+  text-align:left;width:100%;
+}
+.nav-item svg{width:18px;height:18px;flex:0 0 18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nav-item:hover{background:var(--surface);color:var(--text);transform:translateX(2px)}
+.nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.nav-item .nav-count{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--faint)}
+.nav-item.active .nav-count{color:var(--accent);opacity:.8}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);margin-top:auto}
+.stat{background:var(--bg-2);padding:12px 14px}
+.stat-num{font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--text);line-height:1.1}
+.stat-num em{font-style:normal;color:var(--accent)}
+.stat-label{font-size:11px;color:var(--faint);margin-top:2px}
+
+.side-tools{padding:12px 10px;display:flex;flex-direction:column;gap:8px}
+.tool-btn{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:9px 12px;border-radius:var(--r-md);
+  border:1px solid var(--border);background:var(--surface);
+  font-size:13px;color:var(--muted);font-weight:500;
+  transition:border-color .18s,color .18s,background .18s;
+}
+.tool-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.tool-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 15px}
+
+.lang-wrap{position:relative}
+.lang-btn{justify-content:space-between}
+.lang-btn .lang-caret{transition:transform .2s var(--ease)}
+.lang-wrap.open .lang-caret{transform:rotate(180deg)}
+.lang-menu{
+  position:absolute;left:0;right:0;bottom:calc(100% + 6px);
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);
+  overflow:hidden;display:none;box-shadow:0 12px 32px rgba(0,0,0,.5);
+}
+.lang-wrap.open .lang-menu{display:block}
+.lang-opt{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:9px 14px;font-size:13px;color:var(--muted);text-align:left;
+  transition:background .15s,color .15s;
+}
+.lang-opt:hover{background:var(--surface);color:var(--text)}
+.lang-opt.active{color:var(--accent)}
+.lang-opt .lang-check{width:14px;height:14px;flex:0 0 14px;stroke:var(--accent);stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.lang-opt.active .lang-check{opacity:1}
+
+/* ============ MAIN ============ */
+.main{flex:1;min-width:0;position:relative;display:flex;flex-direction:column;overflow:hidden}
+.main::before{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);
+  background-size:56px 56px;
+  animation:grid-pan 44s linear infinite;
+}
+@keyframes grid-pan{to{background-position:56px 56px}}
+.view{
+  position:relative;z-index:1;flex:1;min-height:0;
+  display:none;flex-direction:column;
+}
+.view.active{display:flex;animation:view-in .32s var(--ease)}
+@keyframes view-in{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
+
+.view-head{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:22px 28px 14px;
+}
+.view-title{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+.view-title small{display:block;font-family:var(--font-mono);font-size:11px;font-weight:400;color:var(--faint);letter-spacing:.12em;text-transform:uppercase;margin-top:3px}
+.head-actions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ============ BUTTONS ============ */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 18px;border-radius:999em;
+  font-size:13.5px;font-weight:600;letter-spacing:.02em;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);
+  transition:border-color .18s,color .18s,background .18s,transform .12s var(--ease),box-shadow .3s;
+  white-space:nowrap;
+}
+.btn:hover{border-color:var(--faint)}
+.btn:active{transform:scale(.97)}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn-primary{
+  background:var(--accent);border-color:var(--accent);color:#0A0B0D;
+  animation:cta-breathe 3.4s ease-in-out infinite;
+}
+@keyframes cta-breathe{0%,100%{box-shadow:0 0 0 0 rgba(211,253,80,0)}50%{box-shadow:0 0 0 5px rgba(211,253,80,.16)}}
+.btn-primary:hover{background:#e2ff7d;border-color:#e2ff7d}
+.btn-danger{border-color:rgba(216,92,70,.5);color:var(--danger)}
+.btn-danger:hover{background:rgba(216,92,70,.12);border-color:var(--danger)}
+.btn-sm{padding:6px 13px;font-size:12.5px}
+
+.seg{display:flex;border:1px solid var(--border);border-radius:999em;overflow:hidden;background:var(--surface)}
+.seg button{
+  padding:7px 15px;font-size:12.5px;font-weight:600;color:var(--faint);
+  transition:color .18s,background .18s;
+}
+.seg button:hover{color:var(--text)}
+.seg button.active{background:var(--accent);color:#0A0B0D}
+
+.icon-btn{
+  width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  transition:color .18s,border-color .18s,background .18s,transform .12s var(--ease);
+}
+.icon-btn:hover{color:var(--accent);border-color:var(--accent)}
+.icon-btn:active{transform:scale(.93)}
+.icon-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ============ TREE VIEW ============ */
+.tree-stage{flex:1;min-height:0;position:relative;margin:0 28px 24px;border:1px solid var(--border-soft);border-radius:var(--r-lg);background:rgba(18,19,22,.45);overflow:hidden}
+.tree-stage svg{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
+.tree-stage svg.dragging{cursor:grabbing}
+.tree-edge{fill:none;stroke:var(--border);stroke-width:1.5}
+.tree-edge.hot{stroke:var(--accent);stroke-width:2;filter:drop-shadow(0 0 6px rgba(211,253,80,.5))}
+.tree-node{cursor:pointer}
+.tree-node rect.body{fill:var(--surface-2);stroke:var(--border);stroke-width:1.2;transition:stroke .2s,filter .2s}
+.tree-node:hover rect.body{stroke:var(--node-color,var(--accent));filter:drop-shadow(0 0 12px rgba(211,253,80,.18))}
+.tree-node text{font-family:var(--font-display)}
+.tree-node .t-name{fill:var(--text);font-size:13.5px;font-weight:600}
+.tree-node .t-lvl{fill:var(--faint);font-family:var(--font-mono);font-size:10px}
+.tree-node .lvl-track{fill:rgba(255,255,255,.07)}
+.tree-node .lvl-fill{fill:var(--node-color,var(--accent))}
+.tree-hint{
+  position:absolute;left:16px;bottom:14px;
+  font-family:var(--font-mono);font-size:10.5px;color:var(--faint);letter-spacing:.05em;
+  background:rgba(10,11,13,.7);backdrop-filter:blur(6px);
+  padding:5px 12px;border-radius:99px;border:1px solid var(--border-soft);
+  pointer-events:none;
+}
+.zoom-tools{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:6px}
+
+/* ============ CARDS VIEW ============ */
+.cards-scroll{flex:1;min-height:0;overflow-y:auto;padding:6px 28px 28px}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.skill-card{
+  position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:20px;cursor:pointer;overflow:hidden;
+  transition:border-color .22s var(--ease),transform .22s var(--ease),box-shadow .3s;
+}
+.skill-card::before{
+  content:"";position:absolute;inset:0;opacity:0;transition:opacity .3s;pointer-events:none;
+  background:radial-gradient(420px 160px at 20% 0%,var(--card-glow,rgba(211,253,80,.09)),transparent 70%);
+}
+.skill-card:hover{border-color:var(--card-color,var(--accent));transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.4)}
+.skill-card:hover::before{opacity:1}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
+.sc-tier{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--card-color,var(--accent))}
+.sc-name{font-size:17px;font-weight:700;letter-spacing:-.01em;line-height:1.25;margin-bottom:6px;word-break:break-word}
+.sc-desc{font-size:12.5px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
+.sc-foot{display:flex;align-items:center;gap:12px;margin-top:14px}
+.sc-dial{position:relative;width:52px;height:52px;flex:0 0 52px}
+.sc-dial svg{width:52px;height:52px;transform:rotate(-90deg)}
+.sc-dial .dial-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:4}
+.sc-dial .dial-fg{fill:none;stroke:var(--card-color,var(--accent));stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .7s var(--ease)}
+.sc-dial .dial-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:700}
+.sc-bar{flex:1}
+.sc-bar .bar-track{height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.sc-bar .bar-fill{height:100%;border-radius:99px;background:var(--card-color,var(--accent));transition:width .7s var(--ease)}
+.sc-bar .bar-lbl{font-family:var(--font-mono);font-size:10px;color:var(--faint);margin-top:5px}
+
+/* ============ EMPTY STATE ============ */
+.empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  height:100%;min-height:260px;text-align:center;padding:30px;
+}
+.empty-icon{width:56px;height:56px;border-radius:16px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--faint)}
+.empty-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.empty-title{font-size:16px;font-weight:600;color:var(--muted)}
+.empty-sub{font-size:13px;color:var(--faint);max-width:34ch}
+
+/* ============ NOTEBOOK ============ */
+.notes-wrap{flex:1;min-height:0;display:flex;margin:0 28px 24px;border:1px solid var(--border-soft);border-radius:var(--r-lg);overflow:hidden;background:rgba(18,19,22,.45)}
+.notes-list{width:280px;flex:0 0 280px;border-right:1px solid var(--border-soft);display:flex;flex-direction:column;min-height:0}
+.notes-search{padding:12px;border-bottom:1px solid var(--border-soft)}
+.notes-search input{
+  width:100%;padding:9px 13px;border-radius:10px;border:1px solid var(--border);background:var(--bg);
+  font-size:13px;outline:none;transition:border-color .18s;
+}
+.notes-search input:focus{border-color:var(--accent)}
+.notes-scroll{flex:1;overflow-y:auto;padding:8px}
+.note-item{
+  width:100%;text-align:left;padding:12px 13px;border-radius:var(--r-md);margin-bottom:2px;
+  transition:background .15s;border:1px solid transparent;
+}
+.note-item:hover{background:var(--surface)}
+.note-item.active{background:var(--surface-2);border-color:var(--border)}
+.note-item .ni-title{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-item .ni-meta{font-family:var(--font-mono);font-size:10px;color:var(--faint);margin-top:3px;display:flex;gap:8px}
+.note-item.active .ni-title{color:var(--accent)}
+.notes-editor{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
+.ne-meta{display:flex;align-items:center;gap:14px;padding:10px 20px;border-bottom:1px solid var(--border-soft);font-family:var(--font-mono);font-size:11px;color:var(--faint)}
+.ne-meta .spacer{flex:1}
+.ne-saved{color:var(--pass);opacity:0;transition:opacity .3s}
+.ne-saved.show{opacity:1}
+.ne-title{
+  padding:18px 20px 6px;font-size:24px;font-weight:700;letter-spacing:-.01em;
+  background:transparent;border:none;outline:none;width:100%;
+  font-family:var(--font-display);
+}
+.ne-title::placeholder{color:var(--faint)}
+.ne-body{
+  flex:1;resize:none;border:none;outline:none;background:transparent;
+  padding:10px 20px 24px;font-family:var(--font-mono);font-size:14px;line-height:1.8;color:var(--muted);
+}
+.ne-body::placeholder{color:var(--faint)}
+
+/* ============ TODO ============ */
+.todo-wrap{flex:1;min-height:0;display:flex;flex-direction:column;margin:0 28px 24px;min-height:0}
+.todo-progress{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.tp-track{flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.tp-fill{height:100%;border-radius:99px;background:var(--accent);box-shadow:0 0 12px rgba(211,253,80,.4);transition:width .6s var(--ease)}
+.tp-num{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--accent)}
+.todo-add{
+  display:flex;gap:8px;padding:10px;border:1px solid var(--border);border-radius:var(--r-lg);
+  background:var(--surface);margin-bottom:14px;flex-wrap:wrap;
+}
+.todo-add input[type=text]{
+  flex:1;min-width:180px;background:transparent;border:none;outline:none;font-size:14.5px;padding:8px 10px;
+}
+.todo-add input[type=text]::placeholder{color:var(--faint)}
+.todo-add input[type=date]{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:10px;color:var(--muted);
+  font-family:var(--font-mono);font-size:12px;padding:8px 10px;outline:none;
+}
+.todo-add input[type=date]:focus{border-color:var(--accent)}
+.todo-filters{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.todo-filters .count-lbl{font-family:var(--font-mono);font-size:11px;color:var(--faint);margin-left:auto}
+.todo-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px}
+.todo-item{
+  display:flex;align-items:center;gap:13px;
+  padding:13px 16px;border:1px solid var(--border-soft);border-radius:var(--r-md);
+  background:rgba(18,19,22,.6);
+  transition:border-color .2s,background .2s,transform .2s var(--ease),opacity .25s;
+  animation:todo-in .28s var(--ease);
+}
+@keyframes todo-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.todo-item:hover{border-color:var(--border);background:var(--surface)}
+.todo-item.done{opacity:.45}
+.todo-item.done .tt-text{text-decoration:line-through}
+.todo-item.removing{opacity:0;transform:translateX(30px)}
+.tt-check{
+  width:23px;height:23px;flex:0 0 23px;border-radius:8px;
+  border:1.6px solid var(--faint);display:flex;align-items:center;justify-content:center;
+  transition:border-color .2s,background .2s;
+}
+.tt-check svg{width:13px;height:13px;stroke:#0A0B0D;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:20;stroke-dashoffset:20;transition:stroke-dashoffset .3s var(--ease) .05s}
+.todo-item.done .tt-check{background:var(--accent);border-color:var(--accent)}
+.todo-item.done .tt-check svg{stroke-dashoffset:0}
+.tt-text{flex:1;font-size:14.5px;min-width:0;word-break:break-word}
+.tt-due{font-family:var(--font-mono);font-size:10.5px;color:var(--faint);border:1px solid var(--border);border-radius:99px;padding:3px 10px;white-space:nowrap}
+.tt-due.overdue{color:var(--danger);border-color:rgba(216,92,70,.5)}
+.tt-pri{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
+.tt-pri.low{background:var(--pass)}
+.tt-pri.mid{background:var(--warn)}
+.tt-pri.high{background:var(--danger);box-shadow:0 0 8px rgba(216,92,70,.6)}
+.tt-del{opacity:0;transition:opacity .18s,color .18s;color:var(--faint);padding:4px;border-radius:6px}
+.todo-item:hover .tt-del,.tt-del:focus-visible{opacity:1}
+.tt-del:hover{color:var(--danger)}
+.tt-del svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
+.clear-done{margin-top:12px;align-self:flex-start}
+
+/* ============ DRAWER (skill detail) ============ */
+.drawer-veil{
+  position:fixed;inset:0;background:rgba(5,6,8,.55);backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .25s;z-index:60;
+}
+.drawer-veil.open{opacity:1;pointer-events:auto}
+.drawer{
+  position:absolute;top:0;right:0;bottom:0;width:min(400px,92vw);
+  background:var(--bg-2);border-left:1px solid var(--border);
+  transform:translateX(103%);transition:transform .32s var(--ease);
+  display:flex;flex-direction:column;overflow-y:auto;
+}
+.drawer-veil.open .drawer{transform:none}
+.dr-head{display:flex;align-items:center;gap:10px;padding:18px 20px 0}
+.dr-head .spacer{flex:1}
+.dr-body{padding:8px 20px 24px;display:flex;flex-direction:column;gap:18px}
+.dr-dial-wrap{display:flex;align-items:center;gap:20px;padding:16px 0 4px}
+.dr-dial{position:relative;width:96px;height:96px;flex:0 0 96px}
+.dr-dial svg{width:96px;height:96px;transform:rotate(-90deg)}
+.dr-dial .dial-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:6}
+.dr-dial .dial-fg{fill:none;stroke:var(--dr-color,var(--accent));stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .5s var(--ease)}
+.dr-dial .dial-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dr-dial .dial-num b{font-family:var(--font-mono);font-size:24px;font-weight:700;line-height:1}
+.dr-dial .dial-num span{font-family:var(--font-mono);font-size:9px;color:var(--faint);letter-spacing:.12em;text-transform:uppercase;margin-top:3px}
+.dr-name{font-size:20px;font-weight:700;letter-spacing:-.01em;word-break:break-word}
+.dr-tier{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dr-color,var(--accent));margin-top:2px}
+.dr-desc{font-size:13.5px;color:var(--muted);white-space:pre-wrap}
+.field label{display:block;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:7px}
+.field input[type=text],.field textarea,.field select{
+  width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:10px 13px;font-size:14px;outline:none;transition:border-color .18s;
+}
+.field textarea{resize:vertical;min-height:70px;line-height:1.6}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2369707A' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.lvl-row{display:flex;align-items:center;gap:14px}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.1);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:var(--accent);border:3px solid #0A0B0D;box-shadow:0 0 0 1.5px var(--accent),0 0 10px rgba(211,253,80,.5);
+  transition:transform .15s var(--ease);cursor:grab;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid #0A0B0D;box-shadow:0 0 0 1.5px var(--accent);cursor:grab}
+.lvl-val{font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--accent);min-width:42px;text-align:right}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatch{width:26px;height:26px;border-radius:8px;border:2px solid transparent;cursor:pointer;transition:transform .15s var(--ease),border-color .15s}
+.swatch:hover{transform:scale(1.15)}
+.swatch.sel{border-color:#fff;box-shadow:0 0 0 2px var(--bg),0 0 10px currentColor}
+.dr-actions{display:flex;gap:8px;margin-top:4px}
+.dr-actions .spacer{flex:1}
+.dr-parent-lbl{font-family:var(--font-mono);font-size:11px;color:var(--faint)}
+.dr-parent-lbl b{color:var(--muted);font-weight:500}
+
+/* ============ MODAL ============ */
+.modal-veil{
+  position:fixed;inset:0;z-index:80;background:rgba(5,6,8,.6);backdrop-filter:blur(5px);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.modal-veil.open{opacity:1;pointer-events:auto}
+.modal{
+  width:min(460px,100%);background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:24px;transform:scale(.95) translateY(8px);transition:transform .25s var(--ease);
+  max-height:88dvh;overflow-y:auto;
+}
+.modal-veil.open .modal{transform:none}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.modal-msg{font-size:13.5px;color:var(--muted);margin-bottom:20px;word-break:break-word}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+.modal .field{margin-bottom:14px}
+
+/* ============ TOAST ============ */
+.toasts{position:fixed;top:18px;right:18px;z-index:100;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--accent);
+  border-radius:var(--r-md);padding:11px 16px;font-size:13px;font-weight:500;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
+  animation:toast-in .3s var(--ease);
+  max-width:320px;
+}
+.toast.err{border-left-color:var(--danger)}
+.toast.out{animation:toast-out .25s var(--ease) forwards}
+@keyframes toast-in{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+@keyframes toast-out{to{opacity:0;transform:translateX(30px)}}
+.toast .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:0 0 7px}
+.toast.err .dot{background:var(--danger)}
+
+/* ============ MOBILE ============ */
+.menu-fab{display:none;position:fixed;left:14px;bottom:14px;z-index:70;width:48px;height:48px;border-radius:50%;background:var(--accent);color:#0A0B0D;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:cta-breathe 3.4s ease-in-out infinite}
+.menu-fab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+@media (max-width:860px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-103%);transition:transform .3s var(--ease);box-shadow:20px 0 60px rgba(0,0,0,.5)}
+  .sidebar.open{transform:none}
+  .menu-fab{display:flex}
+  .view-head{padding:18px 16px 12px}
+  .view-title{font-size:21px}
+  .tree-stage,.todo-wrap{margin:0 14px 16px}
+  .cards-scroll{padding:4px 14px 20px}
+  .notes-wrap{margin:0 14px 16px;flex-direction:column}
+  .notes-list{width:100%;flex:0 0 auto;max-height:38%;border-right:none;border-bottom:1px solid var(--border-soft)}
+  .todo-add{gap:6px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo"><svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 250">
+	<defs>
+		<image  width="250" height="250" id="img1" href="data:image/png;base64,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"/>
+	</defs>
+	<style>
+	</style>
+	<use id="Background" href="#img1" x="0" y="0"/>
+</svg></div>
+      <div>
+        <div class="brand-name">SkillTree</div>
+        <div class="brand-tag" data-i18n="appTag"></div>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="stats">
+      <div class="stat"><div class="stat-num" id="stat-skills">0</div><div class="stat-label" data-i18n="statSkills"></div></div>
+      <div class="stat"><div class="stat-num" id="stat-notes">0</div><div class="stat-label" data-i18n="statNotes"></div></div>
+      <div class="stat"><div class="stat-num" id="stat-todos">0</div><div class="stat-label" data-i18n="statTodos"></div></div>
+      <div class="stat"><div class="stat-num" id="stat-done">0</div><div class="stat-label" data-i18n="statDone"></div></div>
+    </div>
+    <div class="side-tools">
+      <button class="tool-btn" id="btn-export">
+        <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span data-i18n="export"></span>
+      </button>
+      <button class="tool-btn" id="btn-import">
+        <svg viewBox="0 0 24 24"><path d="M12 15V3m0 12 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span data-i18n="import"></span>
+      </button>
+      <div class="lang-wrap" id="lang-wrap">
+        <button class="tool-btn lang-btn" id="btn-lang">
+          <span style="display:flex;align-items:center;gap:10px">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9S14.5 18.4 12 21c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3Z"/></svg>
+            <span data-i18n="language"></span>
+          </span>
+          <svg class="lang-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="lang-menu" id="lang-menu" role="menu"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <!-- TREE -->
+    <section class="view" id="view-tree">
+      <div class="view-head">
+        <h1 class="view-title"><span data-i18n="treeTitle"></span><small data-i18n="treeSub"></small></h1>
+        <div class="head-actions">
+          <div class="seg" id="tree-mode-seg">
+            <button data-mode="tree" class="active" data-i18n="modeTree"></button>
+            <button data-mode="cards" data-i18n="modeCards"></button>
+          </div>
+          <button class="btn btn-primary" id="btn-add-skill">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            <span data-i18n="addSkill"></span>
+          </button>
+        </div>
+      </div>
+      <div class="tree-stage" id="tree-stage">
+        <svg id="tree-svg" role="img" aria-label="Skill tree"></svg>
+        <div class="tree-hint" id="tree-hint"></div>
+        <div class="zoom-tools">
+          <button class="icon-btn" id="zoom-in" title="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button class="icon-btn" id="zoom-out" title="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+          <button class="icon-btn" id="zoom-reset" title="Reset"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg></button>
+        </div>
+      </div>
+      <div class="cards-scroll" id="cards-scroll" style="display:none">
+        <div class="cards-grid" id="cards-grid"></div>
+      </div>
+    </section>
+
+    <!-- NOTES -->
+    <section class="view" id="view-notes">
+      <div class="view-head">
+        <h1 class="view-title"><span data-i18n="notesTitle"></span><small data-i18n="notesSub"></small></h1>
+        <div class="head-actions">
+          <button class="btn btn-primary" id="btn-add-note">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            <span data-i18n="addNote"></span>
+          </button>
+        </div>
+      </div>
+      <div class="notes-wrap">
+        <div class="notes-list">
+          <div class="notes-search"><input type="text" id="note-search" data-i18n-ph="searchNotes"></div>
+          <div class="notes-scroll" id="notes-scroll"></div>
+        </div>
+        <div class="notes-editor" id="notes-editor"></div>
+      </div>
+    </section>
+
+    <!-- TODO -->
+    <section class="view" id="view-todo">
+      <div class="view-head">
+        <h1 class="view-title"><span data-i18n="todoTitle"></span><small data-i18n="todoSub"></small></h1>
+      </div>
+      <div class="todo-wrap">
+        <div class="todo-progress">
+          <div class="tp-track"><div class="tp-fill" id="tp-fill" style="width:0%"></div></div>
+          <span class="tp-num" id="tp-num">0%</span>
+        </div>
+        <form class="todo-add" id="todo-form">
+          <input type="text" id="todo-input" data-i18n-ph="todoPh" autocomplete="off">
+          <input type="date" id="todo-due">
+          <div class="seg" id="todo-pri">
+            <button type="button" data-pri="low" data-i18n="priLow"></button>
+            <button type="button" data-pri="mid" class="active" data-i18n="priMid"></button>
+            <button type="button" data-pri="high" data-i18n="priHigh"></button>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            <span data-i18n="addTodo"></span>
+          </button>
+        </form>
+        <div class="todo-filters">
+          <div class="seg" id="todo-filter">
+            <button data-f="all" class="active" data-i18n="filterAll"></button>
+            <button data-f="active" data-i18n="filterActive"></button>
+            <button data-f="done" data-i18n="filterDone"></button>
+          </div>
+          <span class="count-lbl" id="todo-count"></span>
+        </div>
+        <div class="todo-list" id="todo-list"></div>
+        <button class="btn btn-sm clear-done" id="btn-clear-done" style="display:none">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6"/></svg>
+          <span data-i18n="clearDone"></span>
+        </button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<button class="menu-fab" id="menu-fab" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+
+<!-- ============ DRAWER ============ -->
+<div class="drawer-veil" id="drawer-veil">
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true"></aside>
+</div>
+
+<!-- ============ MODAL ============ -->
+<div class="modal-veil" id="modal-veil">
+  <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+
+<script>
+"use strict";
+/* ================= CONSTANTS ================= */
+const LS_KEY = "skilltree.workbench.v1";
+const COLORS = ["#D3FD50","#5FA8C7","#FF9E40","#D85C46","#B48CFF","#4ADE80","#F472B6","#FACC15"];
+const LANGS = [["zh","中文"],["en","English"],["de","Deutsch"],["ru","Русский"],["ko","한국어"],["fr","Français"],["es","Español"]];
+const SVGNS = "http://www.w3.org/2000/svg";
+
+/* ================= I18N ================= */
+const I18N = {
+zh:{appTag:"本地技能工作台",statSkills:"技能",statNotes:"笔记",statTodos:"待办",statDone:"已完成",export:"导出 JSON",import:"导入 JSON",language:"语言",
+navTree:"技能树",navNotes:"笔记本",navTodos:"待办清单",
+treeTitle:"技能树",treeSub:"自定义你的成长路线",modeTree:"树状视图",modeCards:"卡牌视图",addSkill:"新增技能",
+fName:"技能名称",fNamePh:"例如：TypeScript",fDesc:"描述",fDescPh:"这项技能是关于什么的？",fLevel:"熟练度",fColor:"主题色",fParent:"上级技能",fRoot:"— 无 · 作为根节点 —",fSave:"保存",fCancel:"取消",fDelete:"删除",
+tiers:["新手","学徒","能手","专家","大师"],
+emptyTree:"还没有技能",emptyTreeSub:"点击「新增技能」，种下你的第一颗技能种子。",emptyNotes:"暂无笔记",emptyNotesSub:"点击「新建笔记」开始记录。",emptyTodos:"清单空空如也",emptyTodosSub:"在上方输入框写下第一件事吧。",
+hint:"拖动平移 · 滚轮缩放 · 点击节点查看卡牌",
+notesTitle:"笔记本",notesSub:"想法与灵感",addNote:"新建笔记",searchNotes:"搜索笔记…",untitled:"未命名笔记",chars:"字",updated:"更新于",saved:"已保存",noNoteSel:"从左侧选择或新建一篇笔记",errName:"请输入技能名称",
+todoTitle:"待办清单",todoSub:"保持专注，步步为营",todoPh:"要做点什么？",addTodo:"添加",priLow:"低",priMid:"中",priHigh:"高",filterAll:"全部",filterActive:"进行中",filterDone:"已完成",clearDone:"清除已完成",countLbl:"{done} / {total}",
+confirmTitle:"确认操作",confirmDel:"确定删除「{name}」吗？此操作不可撤销。",confirmImport:"导入将覆盖当前全部数据，确定继续吗？",importOk:"数据导入成功",importErr:"导入失败：文件格式不正确",exported:"已导出 JSON 备份文件",added:"已添加",updatedToast:"已更新",deleted:"已删除",
+seedNoteTitle:"欢迎使用 SkillTree",seedNoteBody:"这里的一切数据都只保存在你的浏览器本地（localStorage），随时可以：\n\n· 在「技能树」中创建分支与技能卡牌，拖动滑杆记录熟练度\n· 在「待办清单」里安排每日任务\n· 在「笔记本」中沉淀学习心得\n· 用左下角的导出功能备份为 JSON 文件\n\n开始打造属于你的技能宇宙吧！",seedTodos:["完成 SkillTree 上手体验","给技能树添加一个新分支","写下第一篇学习笔记"]},
+
+en:{appTag:"Local skill workspace",statSkills:"Skills",statNotes:"Notes",statTodos:"Tasks",statDone:"Done",export:"Export JSON",import:"Import JSON",language:"Language",
+navTree:"Skill Tree",navNotes:"Notebook",navTodos:"To-Do List",
+treeTitle:"Skill Tree",treeSub:"chart your own growth",modeTree:"Tree",modeCards:"Cards",addSkill:"New Skill",
+fName:"Skill name",fNamePh:"e.g. TypeScript",fDesc:"Description",fDescPh:"What is this skill about?",fLevel:"Proficiency",fColor:"Color",fParent:"Parent skill",fRoot:"— None · root node —",fSave:"Save",fCancel:"Cancel",fDelete:"Delete",
+tiers:["Novice","Apprentice","Adept","Expert","Master"],
+emptyTree:"No skills yet",emptyTreeSub:"Click “New Skill” to plant your first seed.",emptyNotes:"No notes yet",emptyNotesSub:"Click “New Note” to start writing.",emptyTodos:"Nothing here",emptyTodosSub:"Type your first task above.",
+hint:"Drag to pan · Scroll to zoom · Click a node",
+notesTitle:"Notebook",notesSub:"thoughts & ideas",addNote:"New Note",searchNotes:"Search notes…",untitled:"Untitled note",chars:"chars",updated:"Updated",saved:"Saved",noNoteSel:"Select or create a note",errName:"Please enter a skill name",
+todoTitle:"To-Do List",todoSub:"stay on track",todoPh:"What needs doing?",addTodo:"Add",priLow:"Low",priMid:"Mid",priHigh:"High",filterAll:"All",filterActive:"Active",filterDone:"Done",clearDone:"Clear completed",countLbl:"{done} / {total}",
+confirmTitle:"Please confirm",confirmDel:"Delete “{name}”? This cannot be undone.",confirmImport:"Importing will overwrite all current data. Continue?",importOk:"Data imported successfully",importErr:"Import failed: invalid file format",exported:"JSON backup exported",added:"Added",updatedToast:"Updated",deleted:"Deleted",
+seedNoteTitle:"Welcome to SkillTree",seedNoteBody:"Everything lives locally in your browser (localStorage). You can:\n\n· Build branches and skill cards in the Skill Tree\n· Track daily tasks in the To-Do list\n· Collect learnings in the Notebook\n· Back everything up via Export JSON\n\nGo grow your own skill universe!",seedTodos:["Take SkillTree for a spin","Add a new branch to your tree","Write your first note"]},
+
+de:{appTag:"Lokaler Skill-Arbeitsplatz",statSkills:"Skills",statNotes:"Notizen",statTodos:"Aufgaben",statDone:"Erledigt",export:"JSON exportieren",import:"JSON importieren",language:"Sprache",
+navTree:"Skillbaum",navNotes:"Notizbuch",navTodos:"Aufgabenliste",
+treeTitle:"Skillbaum",treeSub:"deine eigene Lernroute",modeTree:"Baum",modeCards:"Karten",addSkill:"Neuer Skill",
+fName:"Skill-Name",fNamePh:"z. B. TypeScript",fDesc:"Beschreibung",fDescPh:"Worum geht es bei diesem Skill?",fLevel:"Können",fColor:"Farbe",fParent:"Übergeordneter Skill",fRoot:"— Keiner · Wurzelknoten —",fSave:"Speichern",fCancel:"Abbrechen",fDelete:"Löschen",
+tiers:["Anfänger","Lehrling","Könner","Experte","Meister"],
+emptyTree:"Noch keine Skills",emptyTreeSub:"Klicke auf „Neuer Skill“ und leg los.",emptyNotes:"Keine Notizen",emptyNotesSub:"Klicke auf „Neue Notiz“.",emptyTodos:"Nichts zu tun",emptyTodosSub:"Schreib oben deine erste Aufgabe.",
+hint:"Ziehen zum Verschieben · Scrollen zum Zoomen · Klick auf Knoten",
+notesTitle:"Notizbuch",notesSub:"Gedanken & Ideen",addNote:"Neue Notiz",searchNotes:"Notizen suchen…",untitled:"Unbenannte Notiz",chars:"Zeichen",updated:"Aktualisiert",saved:"Gespeichert",noNoteSel:"Notiz wählen oder neu erstellen",errName:"Bitte einen Skill-Namen eingeben",
+todoTitle:"Aufgabenliste",todoSub:"bleib dran",todoPh:"Was ist zu tun?",addTodo:"Hinzufügen",priLow:"Niedrig",priMid:"Mittel",priHigh:"Hoch",filterAll:"Alle",filterActive:"Offen",filterDone:"Erledigt",clearDone:"Erledigte löschen",countLbl:"{done} / {total}",
+confirmTitle:"Bitte bestätigen",confirmDel:"„{name}“ wirklich löschen? Nicht rückgängig machbar.",confirmImport:"Der Import überschreibt alle aktuellen Daten. Fortfahren?",importOk:"Import erfolgreich",importErr:"Import fehlgeschlagen: ungültiges Format",exported:"JSON-Backup exportiert",added:"Hinzugefügt",updatedToast:"Aktualisiert",deleted:"Gelöscht",
+seedNoteTitle:"Willkommen bei SkillTree",seedNoteBody:"Alle Daten bleiben lokal in deinem Browser (localStorage):\n\n· Baue deinen Skillbaum mit Karten\n· Verwalte Aufgaben in der Liste\n· Sammle Ideen im Notizbuch\n· Sichere alles per JSON-Export\n\nViel Erfolg!",seedTodos:["SkillTree ausprobieren","Einen neuen Zweig hinzufügen","Die erste Notiz schreiben"]},
+
+ru:{appTag:"Локальное рабочее место",statSkills:"Навыки",statNotes:"Заметки",statTodos:"Задачи",statDone:"Готово",export:"Экспорт JSON",import:"Импорт JSON",language:"Язык",
+navTree:"Дерево навыков",navNotes:"Записная книжка",navTodos:"Список задач",
+treeTitle:"Дерево навыков",treeSub:"карта твоего роста",modeTree:"Дерево",modeCards:"Карты",addSkill:"Новый навык",
+fName:"Название навыка",fNamePh:"напр. TypeScript",fDesc:"Описание",fDescPh:"О чём этот навык?",fLevel:"Уровень",fColor:"Цвет",fParent:"Родительский навык",fRoot:"— Нет · корневой узел —",fSave:"Сохранить",fCancel:"Отмена",fDelete:"Удалить",
+tiers:["Новичок","Ученик","Знаток","Эксперт","Мастер"],
+emptyTree:"Пока нет навыков",emptyTreeSub:"Нажми «Новый навык» и начни.",emptyNotes:"Заметок нет",emptyNotesSub:"Нажми «Новая заметка».",emptyTodos:"Список пуст",emptyTodosSub:"Напиши первую задачу выше.",
+hint:"Тяни для панорамы · Колесо — масштаб · Клик по узлу",
+notesTitle:"Записная книжка",notesSub:"мысли и идеи",addNote:"Новая заметка",searchNotes:"Поиск заметок…",untitled:"Без названия",chars:"зн.",updated:"Обновлено",saved:"Сохранено",noNoteSel:"Выбери или создай заметку",errName:"Введите название навыка",
+todoTitle:"Список задач",todoSub:"держи курс",todoPh:"Что нужно сделать?",addTodo:"Добавить",priLow:"Низкий",priMid:"Средний",priHigh:"Высокий",filterAll:"Все",filterActive:"Активные",filterDone:"Готово",clearDone:"Убрать готовые",countLbl:"{done} / {total}",
+confirmTitle:"Подтверждение",confirmDel:"Удалить «{name}»? Это нельзя отменить.",confirmImport:"Импорт заменит все текущие данные. Продолжить?",importOk:"Данные импортированы",importErr:"Ошибка импорта: неверный формат",exported:"JSON-копия экспортирована",added:"Добавлено",updatedToast:"Обновлено",deleted:"Удалено",
+seedNoteTitle:"Добро пожаловать в SkillTree",seedNoteBody:"Все данные хранятся локально в браузере (localStorage):\n\n· Строй дерево навыков и карточки\n· Веди список задач\n· Сохраняй мысли в заметках\n· Делай резервные копии в JSON\n\nУдачи!",seedTodos:["Попробовать SkillTree","Добавить новую ветку","Написать первую заметку"]},
+
+ko:{appTag:"로컬 스킬 워크스페이스",statSkills:"스킬",statNotes:"노트",statTodos:"할 일",statDone:"완료",export:"JSON 납품",import:"JSON 가져오기",language:"언어",
+navTree:"스킬 트리",navNotes:"노트북",navTodos:"할 일 목록",
+treeTitle:"스킬 트리",treeSub:"나만의 성장 로드맵",modeTree:"트리",modeCards:"카드",addSkill:"스킬 추가",
+fName:"스킬 이름",fNamePh:"예: TypeScript",fDesc:"설명",fDescPh:"이 스킬은 어떤 것인가요?",fLevel:"숙련도",fColor:"색상",fParent:"상위 스킬",fRoot:"— 없음 · 루트 노드 —",fSave:"저장",fCancel:"취소",fDelete:"삭제",
+tiers:["입문","견습","숙련","전문가","마스터"],
+emptyTree:"아직 스킬이 없습니다",emptyTreeSub:"「스킬 추가」를 눌러 첫 스킬을 심어보세요.",emptyNotes:"노트가 없습니다",emptyNotesSub:"「새 노트」를 눌러 시작하세요.",emptyTodos:"할 일이 없습니다",emptyTodosSub:"위 입력창에 첫 번째 할 일을 적어보세요.",
+hint:"드래그로 이동 · 휠로 확대 · 노드 클릭",
+notesTitle:"노트북",notesSub:"생각과 아이디어",addNote:"새 노트",searchNotes:"노트 검색…",untitled:"제목 없음",chars:"자",updated:"수정됨",saved:"저장됨",noNoteSel:"노트를 선택하거나 새로 만드세요",errName:"스킬 이름을 입력하세요",
+todoTitle:"할 일 목록",todoSub:"꾸준히 나아가기",todoPh:"무엇을 해야 하나요?",addTodo:"추가",priLow:"낮음",priMid:"중간",priHigh:"높음",filterAll:"전체",filterActive:"진행 중",filterDone:"완료",clearDone:"완료 항목 삭제",countLbl:"{done} / {total}",
+confirmTitle:"확인",confirmDel:"「{name}」을(를) 삭제할까요? 되돌릴 수 없습니다.",confirmImport:"가져오기를 하면 현재 데이터가 모두 덮어씌워집니다. 계속할까요?",importOk:"데이터를 가져왔습니다",importErr:"가져오기 실패: 올바르지 않은 형식",exported:"JSON 백업 파일을 납품했습니다",added:"추가됨",updatedToast:"수정됨",deleted:"삭제됨",
+seedNoteTitle:"SkillTree에 오신 것을 환영합니다",seedNoteBody:"모든 데이터는 브라우저 로컬(localStorage)에만 저장됩니다:\n\n· 스킬 트리와 카드 만들기\n· 할 일 목록 관리\n· 노트에 생각 정리하기\n· JSON으로 백업하기\n\n시작해 볼까요!",seedTodos:["SkillTree 둘러보기","새로운 가지 추가하기","첫 노트 작성하기"]},
+
+fr:{appTag:"Atelier de compétences local",statSkills:"Compétences",statNotes:"Notes",statTodos:"Tâches",statDone:"Terminées",export:"Exporter JSON",import:"Importer JSON",language:"Langue",
+navTree:"Arbre de compétences",navNotes:"Carnet",navTodos:"Liste de tâches",
+treeTitle:"Arbre de compétences",treeSub:"trace ta propre voie",modeTree:"Arbre",modeCards:"Cartes",addSkill:"Nouvelle compétence",
+fName:"Nom de la compétence",fNamePh:"ex. TypeScript",fDesc:"Description",fDescPh:"De quoi s'agit-il ?",fLevel:"Maîtrise",fColor:"Couleur",fParent:"Compétence parente",fRoot:"— Aucune · nœud racine —",fSave:"Enregistrer",fCancel:"Annuler",fDelete:"Supprimer",
+tiers:["Novice","Apprenti","Adepte","Expert","Maître"],
+emptyTree:"Aucune compétence",emptyTreeSub:"Cliquez sur « Nouvelle compétence » pour commencer.",emptyNotes:"Aucune note",emptyNotesSub:"Cliquez sur « Nouvelle note ».",emptyTodos:"Rien à faire",emptyTodosSub:"Écrivez votre première tâche ci-dessus.",
+hint:"Glisser pour déplacer · Molette pour zoomer · Cliquer un nœud",
+notesTitle:"Carnet",notesSub:"idées & pensées",addNote:"Nouvelle note",searchNotes:"Rechercher…",untitled:"Note sans titre",chars:"caractères",updated:"Modifié",saved:"Enregistré",noNoteSel:"Sélectionnez ou créez une note",errName:"Veuillez saisir un nom",
+todoTitle:"Liste de tâches",todoSub:"restez concentré",todoPh:"Qu'y a-t-il à faire ?",addTodo:"Ajouter",priLow:"Basse",priMid:"Moyenne",priHigh:"Haute",filterAll:"Toutes",filterActive:"En cours",filterDone:"Terminées",clearDone:"Effacer les terminées",countLbl:"{done} / {total}",
+confirmTitle:"Confirmation",confirmDel:"Supprimer « {name} » ? Action irréversible.",confirmImport:"L'import écrasera toutes les données actuelles. Continuer ?",importOk:"Données importées avec succès",importErr:"Échec de l'import : format invalide",exported:"Sauvegarde JSON exportée",added:"Ajouté",updatedToast:"Mis à jour",deleted:"Supprimé",
+seedNoteTitle:"Bienvenue sur SkillTree",seedNoteBody:"Toutes les données restent dans votre navigateur (localStorage) :\n\n· Créez votre arbre de compétences\n· Suivez vos tâches\n· Notez vos idées\n· Sauvegardez en JSON\n\nBonne route !",seedTodos:["Explorer SkillTree","Ajouter une nouvelle branche","Écrire sa première note"]},
+
+es:{appTag:"Espacio de trabajo local",statSkills:"Habilidades",statNotes:"Notas",statTodos:"Tareas",statDone:"Hechas",export:"Exportar JSON",import:"Importar JSON",language:"Idioma",
+navTree:"Árbol de habilidades",navNotes:"Cuaderno",navTodos:"Lista de tareas",
+treeTitle:"Árbol de habilidades",treeSub:"traza tu propio camino",modeTree:"Árbol",modeCards:"Cartas",addSkill:"Nueva habilidad",
+fName:"Nombre de la habilidad",fNamePh:"p. ej. TypeScript",fDesc:"Descripción",fDescPh:"¿De qué trata esta habilidad?",fLevel:"Dominio",fColor:"Color",fParent:"Habilidad padre",fRoot:"— Ninguna · nodo raíz —",fSave:"Guardar",fCancel:"Cancelar",fDelete:"Eliminar",
+tiers:["Novato","Aprendiz","Adepto","Experto","Maestro"],
+emptyTree:"Aún no hay habilidades",emptyTreeSub:"Pulsa «Nueva habilidad» para empezar.",emptyNotes:"Sin notas",emptyNotesSub:"Pulsa «Nueva nota» para escribir.",emptyTodos:"Nada por hacer",emptyTodosSub:"Escribe tu primera tarea arriba.",
+hint:"Arrastra para mover · Rueda para zoom · Clic en un nodo",
+notesTitle:"Cuaderno",notesSub:"ideas y pensamientos",addNote:"Nueva nota",searchNotes:"Buscar notas…",untitled:"Nota sin título",chars:"caracteres",updated:"Actualizado",saved:"Guardado",noNoteSel:"Selecciona o crea una nota",errName:"Introduce un nombre",
+todoTitle:"Lista de tareas",todoSub:"mantén el rumbo",todoPh:"¿Qué hay que hacer?",addTodo:"Añadir",priLow:"Baja",priMid:"Media",priHigh:"Alta",filterAll:"Todas",filterActive:"Activas",filterDone:"Hechas",clearDone:"Limpiar hechas",countLbl:"{done} / {total}",
+confirmTitle:"Confirmar",confirmDel:"¿Eliminar «{name}»? No se puede deshacer.",confirmImport:"La importación sobrescribirá todos los datos actuales. ¿Continuar?",importOk:"Datos importados correctamente",importErr:"Error de importación: formato no válido",exported:"Copia de seguridad JSON exportada",added:"Añadido",updatedToast:"Actualizado",deleted:"Eliminado",
+seedNoteTitle:"Bienvenido a SkillTree",seedNoteBody:"Todos los datos viven en tu navegador (localStorage):\n\n· Crea tu árbol de habilidades\n· Controla tus tareas\n· Apunta tus ideas\n· Haz copias en JSON\n\n¡A por ello!",seedTodos:["Probar SkillTree","Añadir una rama nueva","Escribir la primera nota"]}
+};
+
+/* ================= UTILS ================= */
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const tierOf = lvl => I18N[state.lang].tiers[clamp(Math.floor(lvl/20),0,4)];
+const localeOf = () => ({zh:"zh-CN",en:"en-US",de:"de-DE",ru:"ru-RU",ko:"ko-KR",fr:"fr-FR",es:"es-ES"})[state.lang]||"en-US";
+const fmtDate = ts => new Date(ts).toLocaleDateString(localeOf(),{month:"short",day:"numeric"});
+const fmtTime = ts => new Date(ts).toLocaleTimeString(localeOf(),{hour:"2-digit",minute:"2-digit"});
+const todayStr = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+function svgEl(tag,attrs={},text){ const n=document.createElementNS(SVGNS,tag); for(const k in attrs)n.setAttribute(k,attrs[k]); if(text!=null)n.textContent=text; return n; }
+function t(key){ return (I18N[state.lang]&&I18N[state.lang][key]) ?? I18N.zh[key] ?? key; }
+function tf(key,repl){ let s=t(key); for(const k in repl)s=s.replace("{"+k+"}",repl[k]); return s; }
+function toast(msg,isErr){
+  const box=$("#toasts"); const el=document.createElement("div");
+  el.className="toast"+(isErr?" err":""); el.innerHTML='<span class="dot"></span>'+esc(msg);
+  box.appendChild(el);
+  setTimeout(()=>{el.classList.add("out"); setTimeout(()=>el.remove(),260)},2400);
+}
+
+/* ================= STATE ================= */
+function detectLang(){
+  const n=(navigator.language||"zh").slice(0,2).toLowerCase();
+  return LANGS.some(l=>l[0]===n)?n:"zh";
+}
+function seedData(lang){
+  const T=I18N[lang]||I18N.zh, now=Date.now();
+  const mkSkill=(name,desc,level,color,parentId)=>({id:uid(),name,desc,level,color,parentId:parentId||null,createdAt:now});
+  let rootA,fe,al,rootB,sub;
+  if(lang==="zh"){
+    rootA=mkSkill("编程","用代码构建世界",55,"#D3FD50");
+    fe=mkSkill("前端开发","HTML / CSS / JavaScript / 框架",70,"#5FA8C7",rootA.id);
+    al=mkSkill("算法","数据结构与算法思维",40,"#FF9E40",rootA.id);
+    rootB=mkSkill("语言学习","沟通无国界",60,"#F472B6");
+    sub=mkSkill("英语","读、写、说、听",75,"#4ADE80",rootB.id);
+  }else{
+    rootA=mkSkill("Coding","Building things with code",55,"#D3FD50");
+    fe=mkSkill("Frontend","HTML / CSS / JavaScript",70,"#5FA8C7",rootA.id);
+    al=mkSkill("Algorithms","Data structures & thinking",40,"#FF9E40",rootA.id);
+    rootB=mkSkill("Languages","Communication without borders",60,"#F472B6");
+    sub=mkSkill("English","Reading, writing, speaking",75,"#4ADE80",rootB.id);
+  }
+  const d=todayStr();
+  return {
+    lang,
+    skills:[rootA,fe,al,rootB,sub],
+    notes:[{id:uid(),title:T.seedNoteTitle,body:T.seedNoteBody,updatedAt:now}],
+    todos:[
+      {id:uid(),text:T.seedTodos[0],done:false,pri:"mid",due:d,createdAt:now},
+      {id:uid(),text:T.seedTodos[1],done:false,pri:"high",due:"",createdAt:now+1},
+      {id:uid(),text:T.seedTodos[2],done:false,pri:"low",due:"",createdAt:now+2}
+    ]
+  };
+}
+function save(){ localStorage.setItem(LS_KEY,JSON.stringify(state)); }
+function load(){
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(!raw)return null;
+    const d=JSON.parse(raw);
+    if(!d||!Array.isArray(d.skills)||!Array.isArray(d.notes)||!Array.isArray(d.todos))return null;
+    if(!LANGS.some(l=>l[0]===d.lang))d.lang=detectLang();
+    return d;
+  }catch(e){ return null; }
+}
+let state = load() || (()=>{ const d=seedData(detectLang()); localStorage.setItem(LS_KEY,JSON.stringify(d)); return d; })();
+
+/* ================= SHELL / NAV ================= */
+const NAV=[
+  {id:"tree",icon:'<svg viewBox="0 0 24 24"><path d="M12 3v5m0 0c-4 0-7 3-7 7m7-7c4 0 7 3 7 7M5 20c0-3.9 3.1-5 7-5s7 1.1 7 5"/><circle cx="12" cy="3" r="1.6"/><circle cx="5" cy="20" r="1.6"/><circle cx="19" cy="20" r="1.6"/></svg>'},
+  {id:"notes",icon:'<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>'},
+  {id:"todo",icon:'<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/><rect x="3" y="3" width="18" height="18" rx="4"/></svg>'}
+];
+let currentView="tree";
+function renderNav(){
+  const nav=$("#nav"); nav.innerHTML="";
+  const counts={tree:state.skills.length,notes:state.notes.length,todo:state.todos.filter(x=>!x.done).length};
+  const names={tree:t("navTree"),notes:t("navNotes"),todo:t("navTodos")};
+  NAV.forEach(n=>{
+    const b=document.createElement("button");
+    b.className="nav-item"+(currentView===n.id?" active":"");
+    b.innerHTML=n.icon+'<span>'+esc(names[n.id])+'</span><span class="nav-count">'+counts[n.id]+"</span>";
+    b.onclick=()=>{ switchView(n.id); $("#sidebar").classList.remove("open"); };
+    nav.appendChild(b);
+  });
+}
+function switchView(id){
+  currentView=id;
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+id));
+  renderNav();
+  if(id==="tree") requestAnimationFrame(fitTree);
+}
+function renderStats(){
+  $("#stat-skills").textContent=state.skills.length;
+  $("#stat-notes").textContent=state.notes.length;
+  $("#stat-todos").textContent=state.todos.length;
+  $("#stat-done").innerHTML="<em>"+state.todos.filter(x=>x.done).length+"</em>";
+}
+
+/* ================= I18N APPLY ================= */
+function applyI18n(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent=t(el.dataset.i18n));
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>el.placeholder=t(el.dataset.i18nPh));
+  document.title="SkillTree · "+t("treeTitle");
+  document.documentElement.lang=state.lang==="zh"?"zh-CN":state.lang;
+  $("#tree-hint").textContent=t("hint");
+  renderLangMenu(); renderNav();
+}
+function renderLangMenu(){
+  const m=$("#lang-menu"); m.innerHTML="";
+  LANGS.forEach(([code,name])=>{
+    const b=document.createElement("button");
+    b.className="lang-opt"+(state.lang===code?" active":"");
+    b.innerHTML='<svg class="lang-check" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg><span>'+esc(name)+"</span>";
+    b.onclick=()=>{ state.lang=code; save(); $("#lang-wrap").classList.remove("open"); applyI18n(); renderAll(); toast(t("updatedToast")); };
+    m.appendChild(b);
+  });
+}
+
+/* ================= SKILL TREE ================= */
+let treeMode="tree";
+let treeView={x:0,y:0,w:100,h:100}, treeContent={w:100,h:100}, suppressClick=false;
+
+function normalizedSkills(){
+  const ids=new Set(state.skills.map(s=>s.id));
+  return state.skills.map(s=>({...s,p:(s.parentId&&ids.has(s.parentId))?s.parentId:null}));
+}
+function layoutTree(){
+  const skills=normalizedSkills().sort((a,b)=>a.createdAt-b.createdAt);
+  const byParent={};
+  skills.forEach(s=>{ (byParent[s.p]??=[]).push(s); });
+  const pos={}; let leafY=0;
+  const ROW=92, COL=270, NW=196, NH=60;
+  function walk(node,depth){
+    const kids=byParent[node.id]||[];
+    let y;
+    if(!kids.length){ y=leafY*ROW+ROW/2; leafY++; }
+    else{ const ys=kids.map(k=>walk(k,depth+1)); y=(ys[0]+ys[ys.length-1])/2; }
+    pos[node.id]={x:34+depth*COL,y};
+    return y;
+  }
+  (byParent[null]||[]).forEach(r=>walk(r,0));
+  const depths=Object.values(pos).map(p=>p.x);
+  treeContent={w:Math.max(...depths,34)+NW+60,h:Math.max(leafY*ROW,ROW)+40};
+  return {skills,byParent,pos,NW,NH};
+}
+function renderTree(){
+  const svg=$("#tree-svg"); svg.innerHTML="";
+  const {skills,pos,NW,NH}=layoutTree();
+  const g=svgEl("g"); svg.appendChild(g);
+  skills.forEach(s=>{
+    if(!s.p||!pos[s.p])return;
+    const a=pos[s.p],b=pos[s.id];
+    g.appendChild(svgEl("path",{class:"tree-edge",d:`M ${a.x+NW} ${a.y} C ${a.x+NW+70} ${a.y}, ${b.x-70} ${b.y}, ${b.x} ${b.y}`}));
+  });
+  skills.forEach(s=>{
+    const p=pos[s.id];
+    const node=svgEl("g",{class:"tree-node",transform:`translate(${p.x},${p.y})`});
+    node.style.setProperty("--node-color",s.color||"#D3FD50");
+    node.appendChild(svgEl("rect",{class:"body",x:0,y:-NH/2,width:NW,height:NH,rx:15}));
+    const name=s.name.length>15?s.name.slice(0,14)+"…":s.name;
+    node.appendChild(svgEl("text",{class:"t-name",x:16,y:-4},name));
+    node.appendChild(svgEl("text",{class:"t-lvl",x:16,y:16},`LV ${s.level} · ${tierOf(s.level)}`));
+    node.appendChild(svgEl("rect",{class:"lvl-track",x:16,y:22,width:NW-32,height:4,rx:2}));
+    node.appendChild(svgEl("rect",{class:"lvl-fill",x:16,y:22,width:(NW-32)*s.level/100,height:4,rx:2}));
+    node.addEventListener("click",()=>{ if(!suppressClick)openDrawer(s.id); });
+    g.appendChild(node);
+  });
+  fitTree();
+  let ov=$("#tree-empty");
+  if(!skills.length){
+    if(!ov){
+      ov=document.createElement("div"); ov.id="tree-empty"; ov.className="empty";
+      ov.style.cssText="position:absolute;inset:0";
+      $("#tree-stage").appendChild(ov);
+    }
+    ov.innerHTML='<div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 3v5m0 0c-4 0-7 3-7 7m7-7c4 0 7 3 7 7M5 20c0-3.9 3.1-5 7-5s7 1.1 7 5"/></svg></div><div class="empty-title">'+esc(t("emptyTree"))+'</div><div class="empty-sub">'+esc(t("emptyTreeSub"))+"</div>";
+    ov.style.display="flex";
+  } else if(ov) ov.style.display="none";
+}
+function setViewBox(){ $("#tree-svg").setAttribute("viewBox",`${treeView.x} ${treeView.y} ${treeView.w} ${treeView.h}`); }
+function fitTree(){
+  const stage=$("#tree-stage"); if(!stage.clientWidth)return;
+  const pad=30;
+  treeView={x:-pad,y:-pad,w:treeContent.w+pad*2,h:treeContent.h+pad*2};
+  const r=stage.getBoundingClientRect();
+  const sFit=Math.min(r.width/treeView.w, r.height/treeView.h);
+  if(sFit<1){ const cx=treeView.x+treeView.w/2, cy=treeView.y+treeView.h/2; treeView.w/=sFit; treeView.h/=sFit; treeView.x=cx-treeView.w/2; treeView.y=cy-treeView.h/2; }
+  setViewBox();
+}
+function zoomAt(factor,px,py){
+  const svg=$("#tree-svg"), r=svg.getBoundingClientRect();
+  const cx=px==null?treeView.x+treeView.w/2:treeView.x+((px-r.left)/r.width)*treeView.w;
+  const cy=py==null?treeView.y+treeView.h/2:treeView.y+((py-r.top)/r.height)*treeView.h;
+  const nw=clamp(treeView.w*factor,80,treeContent.w*6), nh=nw*(treeView.h/treeView.w);
+  treeView.x=cx-(cx-treeView.x)*(nw/treeView.w);
+  treeView.y=cy-(cy-treeView.y)*(nh/treeView.h);
+  treeView.w=nw; treeView.h=nh; setViewBox();
+}
+(function bindTreePan(){
+  const svg=$("#tree-svg"); let drag=null;
+  svg.addEventListener("pointerdown",e=>{ drag={x:e.clientX,y:e.clientY,vx:treeView.x,vy:treeView.y,moved:0}; svg.classList.add("dragging"); try{svg.setPointerCapture(e.pointerId);}catch(_){}} );
+  svg.addEventListener("pointermove",e=>{
+    if(!drag)return;
+    const r=svg.getBoundingClientRect();
+    const dx=(e.clientX-drag.x)/r.width*treeView.w, dy=(e.clientY-drag.y)/r.height*treeView.h;
+    drag.moved=Math.max(drag.moved,Math.hypot(e.clientX-drag.x,e.clientY-drag.y));
+    if(drag.moved>4){ suppressClick=true; treeView.x=drag.vx-dx; treeView.y=drag.vy-dy; setViewBox(); }
+  });
+  svg.addEventListener("pointerup",()=>{ drag=null; svg.classList.remove("dragging"); setTimeout(()=>suppressClick=false,50); });
+  svg.addEventListener("wheel",e=>{ e.preventDefault(); zoomAt(e.deltaY>0?1.15:0.87,e.clientX,e.clientY); },{passive:false});
+})();
+$("#zoom-in").onclick=()=>zoomAt(0.8);
+$("#zoom-out").onclick=()=>zoomAt(1.25);
+$("#zoom-reset").onclick=fitTree;
+
+/* ================= SKILL CARDS ================= */
+function renderCards(){
+  const grid=$("#cards-grid"); grid.innerHTML="";
+  const skills=normalizedSkills();
+  if(!skills.length){
+    grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 3v5m0 0c-4 0-7 3-7 7m7-7c4 0 7 3 7 7M5 20c0-3.9 3.1-5 7-5s7 1.1 7 5"/></svg></div><div class="empty-title">'+esc(t("emptyTree"))+'</div><div class="empty-sub">'+esc(t("emptyTreeSub"))+"</div></div>";
+    return;
+  }
+  const C=2*Math.PI*23;
+  skills.forEach(s=>{
+    const card=document.createElement("div");
+    card.className="skill-card";
+    card.style.setProperty("--card-color",s.color||"#D3FD50");
+    card.style.setProperty("--card-glow",(s.color||"#D3FD50")+"17");
+    card.innerHTML=
+      '<div class="sc-top"><span class="sc-tier">'+esc(tierOf(s.level))+'</span></div>'+
+      '<div class="sc-name">'+esc(s.name)+'</div>'+
+      '<div class="sc-desc">'+esc(s.desc||"")+'</div>'+
+      '<div class="sc-foot">'+
+        '<div class="sc-dial"><svg viewBox="0 0 52 52"><circle class="dial-bg" cx="26" cy="26" r="23"/><circle class="dial-fg" cx="26" cy="26" r="23" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-s.level/100)).toFixed(1)+'"/></svg><div class="dial-num">'+s.level+"</div></div>"+
+        '<div class="sc-bar"><div class="bar-track"><div class="bar-fill" style="width:'+s.level+'%"></div></div><div class="bar-lbl">LV '+s.level+" / 100</div></div>"+
+      "</div>";
+    card.onclick=()=>openDrawer(s.id);
+    grid.appendChild(card);
+  });
+}
+$("#tree-mode-seg").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  treeMode=b.dataset.mode;
+  document.querySelectorAll("#tree-mode-seg button").forEach(x=>x.classList.toggle("active",x===b));
+  $("#tree-stage").style.display=treeMode==="tree"?"":"none";
+  $("#cards-scroll").style.display=treeMode==="cards"?"":"none";
+  if(treeMode==="tree")requestAnimationFrame(fitTree);
+});
+
+/* ================= DRAWER (skill editor) ================= */
+function descendantsOf(id){
+  const set=new Set();
+  const walk=pid=>state.skills.filter(s=>s.parentId===pid).forEach(s=>{ if(!set.has(s.id)){set.add(s.id);walk(s.id);} });
+  walk(id); return set;
+}
+function openDrawer(skillId){
+  const drawer=$("#drawer");
+  const skill=skillId?state.skills.find(s=>s.id===skillId):null;
+  const C=2*Math.PI*44;
+  let color=skill?(skill.color||COLORS[0]):COLORS[state.skills.length%COLORS.length];
+  let level=skill?skill.level:20;
+  const excl=skill?descendantsOf(skill.id):new Set();
+
+  drawer.innerHTML=
+    '<div class="dr-head"><span class="dr-parent-lbl" id="dr-created"></span><span class="spacer"></span>'+
+    (skill?'<button class="icon-btn" id="dr-del" title="'+esc(t("fDelete"))+'"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6"/></svg></button>':"")+
+    '<button class="icon-btn" id="dr-close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>'+
+    '<div class="dr-body">'+
+      '<div class="dr-dial-wrap"><div class="dr-dial" id="dr-dial" style="--dr-color:'+color+'">'+
+        '<svg viewBox="0 0 96 96"><circle class="dial-bg" cx="48" cy="48" r="44"/><circle class="dial-fg" id="dr-dial-fg" cx="48" cy="48" r="44" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-level/100)).toFixed(1)+'"/></svg>'+
+        '<div class="dial-num"><b id="dr-lvl-num">'+level+'</b><span>LVL</span></div></div>'+
+        '<div><div class="dr-tier" id="dr-tier" style="--dr-color:'+color+'">'+esc(tierOf(level))+'</div>'+
+        '<div class="dr-parent-lbl" style="margin-top:6px;text-transform:none;letter-spacing:0;font-family:var(--font-display);font-size:12px">'+t("updated")+" "+fmtDate(skill?skill.createdAt:Date.now())+"</div></div></div>"+
+      '<div class="field"><label>'+esc(t("fName"))+'</label><input type="text" id="dr-name" maxlength="40" value="'+esc(skill?skill.name:"")+'" placeholder="'+esc(t("fNamePh"))+'"></div>'+
+      '<div class="field"><label>'+esc(t("fDesc"))+'</label><textarea id="dr-desc" rows="3" placeholder="'+esc(t("fDescPh"))+'">'+esc(skill?skill.desc:"")+'</textarea></div>'+
+      '<div class="field"><label>'+esc(t("fLevel"))+'</label><div class="lvl-row"><input type="range" id="dr-lvl" min="0" max="100" step="1" value="'+level+'"><span class="lvl-val" id="dr-lvl-val">'+level+"</span></div></div>"+
+      '<div class="field"><label>'+esc(t("fColor"))+'</label><div class="swatches" id="dr-swatches"></div></div>'+
+      '<div class="field"><label>'+esc(t("fParent"))+'</label><select id="dr-parent"></select></div>'+
+      '<div class="dr-actions"><button class="btn" id="dr-cancel">'+esc(t("fCancel"))+'</button><span class="spacer"></span><button class="btn btn-primary" id="dr-save">'+esc(t("fSave"))+"</button></div>"+
+    "</div>";
+
+  const sw=$("#dr-swatches");
+  COLORS.forEach(c=>{
+    const b=document.createElement("button");
+    b.className="swatch"+(c===color?" sel":""); b.style.background=c; b.style.color=c;
+    b.onclick=()=>{ color=c; sw.querySelectorAll(".swatch").forEach(x=>x.classList.remove("sel")); b.classList.add("sel");
+      $("#dr-dial").style.setProperty("--dr-color",c); $("#dr-tier").style.setProperty("--dr-color",c); };
+    sw.appendChild(b);
+  });
+
+  const parentSel=$("#dr-parent");
+  parentSel.innerHTML='<option value="">'+esc(t("fRoot"))+"</option>";
+  normalizedSkills().filter(s=>!excl.has(s.id)).forEach(s=>{
+    const o=document.createElement("option"); o.value=s.id; o.textContent=s.name;
+    if(skill&&s.id===skill.parentId)o.selected=true;
+    parentSel.appendChild(o);
+  });
+
+  $("#dr-lvl").addEventListener("input",e=>{
+    level=+e.target.value;
+    $("#dr-lvl-num").textContent=level; $("#dr-lvl-val").textContent=level;
+    $("#dr-tier").textContent=tierOf(level);
+    $("#dr-dial-fg").style.strokeDashoffset=(C*(1-level/100)).toFixed(1);
+  });
+  $("#dr-cancel").onclick=closeDrawer;
+  $("#dr-close").onclick=closeDrawer;
+  if(skill)$("#dr-del").onclick=()=>confirmDialog(t("confirmTitle"),tf("confirmDel",{name:skill.name})).then(ok=>{
+    if(!ok)return;
+    state.skills=state.skills.filter(s=>s.id!==skill.id).map(s=>s.parentId===skill.id?{...s,parentId:skill.parentId}:s);
+    save(); closeDrawer(); renderAll(); toast(t("deleted"));
+  });
+  $("#dr-save").onclick=()=>{
+    const name=$("#dr-name").value.trim();
+    if(!name){ toast(t("errName"),true); $("#dr-name").focus(); return; }
+    const desc=$("#dr-desc").value.trim(), parentId=parentSel.value||null;
+    if(skill){
+      Object.assign(skill,{name,desc,level,color,parentId});
+      toast(t("updatedToast"));
+    }else{
+      state.skills.push({id:uid(),name,desc,level,color,parentId,createdAt:Date.now()});
+      toast(t("added"));
+    }
+    save(); closeDrawer(); renderAll();
+  };
+
+  $("#drawer-veil").classList.add("open");
+  setTimeout(()=>{ const n=$("#dr-name"); n&&n.focus(); },320);
+}
+function closeDrawer(){ $("#drawer-veil").classList.remove("open"); }
+$("#drawer-veil").addEventListener("click",e=>{ if(e.target.id==="drawer-veil")closeDrawer(); });
+$("#btn-add-skill").onclick=()=>openDrawer(null);
+
+/* ================= CONFIRM MODAL ================= */
+function confirmDialog(title,msg){
+  return new Promise(res=>{
+    const veil=$("#modal-veil"), m=$("#modal");
+    m.innerHTML='<div class="modal-title">'+esc(title)+'</div><div class="modal-msg">'+esc(msg)+'</div>'+
+      '<div class="modal-actions"><button class="btn" id="md-cancel">'+esc(t("fCancel"))+'</button><button class="btn btn-danger" id="md-ok">'+esc(t("fDelete"))+'</button></div>';
+    veil.classList.add("open");
+    const done=v=>{ veil.classList.remove("open"); res(v); };
+    $("#md-cancel").onclick=()=>done(false);
+    $("#md-ok").onclick=()=>done(true);
+    veil.onclick=e=>{ if(e.target===veil)done(false); };
+  });
+}
+
+/* ================= NOTES ================= */
+let currentNoteId=null, noteQuery="", saveTimer=null;
+function renderNotes(){
+  const list=$("#notes-scroll"); list.innerHTML="";
+  const notes=[...state.notes].sort((a,b)=>b.updatedAt-a.updatedAt)
+    .filter(n=>!noteQuery||(n.title+" "+n.body).toLowerCase().includes(noteQuery));
+  if(!notes.length){
+    list.innerHTML='<div class="empty" style="min-height:200px;height:auto;padding:24px 10px"><div class="empty-title">'+esc(t("emptyNotes"))+'</div><div class="empty-sub">'+esc(t("emptyNotesSub"))+"</div></div>";
+  }
+  notes.forEach(n=>{
+    const b=document.createElement("button");
+    b.className="note-item"+(n.id===currentNoteId?" active":"");
+    b.innerHTML='<div class="ni-title">'+esc(n.title||t("untitled"))+'</div><div class="ni-meta"><span>'+fmtDate(n.updatedAt)+"</span><span>"+(n.body||"").length+" "+esc(t("chars"))+"</span></div>";
+    b.onclick=()=>{ currentNoteId=n.id; renderNotes(); };
+    list.appendChild(b);
+  });
+  renderEditor();
+}
+function renderEditor(){
+  const ed=$("#notes-editor");
+  const n=state.notes.find(x=>x.id===currentNoteId);
+  if(!n){
+    ed.innerHTML='<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></div><div class="empty-title">'+esc(t("noNoteSel"))+"</div></div>";
+    return;
+  }
+  ed.innerHTML=
+    '<div class="ne-meta"><span>'+t("updated")+" "+fmtDate(n.updatedAt)+" · "+fmtTime(n.updatedAt)+'</span><span id="ne-count"></span><span class="ne-saved" id="ne-saved">● '+esc(t("saved"))+'</span><span class="spacer"></span>'+
+    '<button class="icon-btn" id="ne-del" title="'+esc(t("fDelete"))+'"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6"/></svg></button></div>'+
+    '<input class="ne-title" id="ne-title" maxlength="80" value="'+esc(n.title)+'" placeholder="'+esc(t("untitled"))+'">'+
+    '<textarea class="ne-body" id="ne-body" placeholder="…"></textarea>';
+  const body=$("#ne-body"); body.value=n.body||"";
+  const updCount=()=>{ const e=$("#ne-count"); if(e)e.textContent=(body.value.length+" "+t("chars")); };
+  updCount();
+  const doSave=()=>{
+    n.title=$("#ne-title").value; n.body=body.value; n.updatedAt=Date.now();
+    save();
+    const sv=$("#ne-saved"); if(sv){ sv.classList.add("show"); setTimeout(()=>{const e2=$("#ne-saved");e2&&e2.classList.remove("show")},1500); }
+    renderNotes();
+  };
+  const onInput=()=>{ updCount(); clearTimeout(saveTimer); saveTimer=setTimeout(doSave,500); };
+  $("#ne-title").addEventListener("input",onInput);
+  body.addEventListener("input",onInput);
+  $("#ne-del").onclick=()=>confirmDialog(t("confirmTitle"),tf("confirmDel",{name:n.title||t("untitled")})).then(ok=>{
+    if(!ok)return;
+    state.notes=state.notes.filter(x=>x.id!==n.id);
+    if(currentNoteId===n.id)currentNoteId=null;
+    save(); renderNotes(); renderStats(); renderNav(); toast(t("deleted"));
+  });
+}
+$("#btn-add-note").onclick=()=>{
+  const n={id:uid(),title:"",body:"",updatedAt:Date.now()};
+  state.notes.push(n); currentNoteId=n.id; save();
+  renderNotes(); renderStats(); renderNav();
+  const ti=$("#ne-title"); if(ti)ti.focus();
+};
+$("#note-search").addEventListener("input",e=>{ noteQuery=e.target.value.trim().toLowerCase(); renderNotes(); });
+
+/* ================= TODO ================= */
+let todoFilter="all", todoPri="mid";
+function renderTodos(){
+  const list=$("#todo-list"); list.innerHTML="";
+  const items=state.todos.filter(x=>todoFilter==="all"||(todoFilter==="active"?!x.done:x.done));
+  if(!items.length){
+    list.innerHTML='<div class="empty" style="min-height:160px;height:auto"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div><div class="empty-title">'+esc(t("emptyTodos"))+'</div><div class="empty-sub">'+esc(t("emptyTodosSub"))+"</div></div>";
+  }
+  items.forEach(x=>{
+    const row=document.createElement("div");
+    row.className="todo-item"+(x.done?" done":"");
+    const overdue=!x.done&&x.due&&x.due<todayStr();
+    row.innerHTML=
+      '<button class="tt-check" aria-label="toggle"><svg viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></svg></button>'+
+      '<span class="tt-text">'+esc(x.text)+"</span>"+
+      (x.due?'<span class="tt-due'+(overdue?" overdue":"")+'">'+esc(x.due)+"</span>":"")+
+      '<span class="tt-pri '+esc(x.pri)+'"></span>'+
+      '<button class="tt-del" aria-label="delete"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>';
+    row.querySelector(".tt-check").onclick=()=>{ x.done=!x.done; save(); renderTodos(); renderStats(); renderNav(); };
+    row.querySelector(".tt-del").onclick=()=>{ row.classList.add("removing"); setTimeout(()=>{ state.todos=state.todos.filter(y=>y.id!==x.id); save(); renderTodos(); renderStats(); renderNav(); toast(t("deleted")); },220); };
+    list.appendChild(row);
+  });
+  const done=state.todos.filter(x=>x.done).length, total=state.todos.length;
+  $("#tp-fill").style.width=(total?done/total*100:0)+"%";
+  $("#tp-num").textContent=(total?Math.round(done/total*100):0)+"%";
+  $("#todo-count").textContent=tf("countLbl",{done,total});
+  $("#btn-clear-done").style.display=done?"":"none";
+}
+$("#todo-form").addEventListener("submit",e=>{
+  e.preventDefault();
+  const input=$("#todo-input"), text=input.value.trim();
+  if(!text)return;
+  state.todos.unshift({id:uid(),text,done:false,pri:todoPri,due:$("#todo-due").value,createdAt:Date.now()});
+  input.value=""; $("#todo-due").value="";
+  save(); renderTodos(); renderStats(); renderNav(); toast(t("added"));
+});
+$("#todo-pri").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  todoPri=b.dataset.pri;
+  document.querySelectorAll("#todo-pri button").forEach(x=>x.classList.toggle("active",x===b));
+});
+$("#todo-filter").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  todoFilter=b.dataset.f;
+  document.querySelectorAll("#todo-filter button").forEach(x=>x.classList.toggle("active",x===b));
+  renderTodos();
+});
+$("#btn-clear-done").onclick=()=>{ state.todos=state.todos.filter(x=>!x.done); save(); renderTodos(); renderStats(); renderNav(); };
+
+/* ================= EXPORT / IMPORT ================= */
+$("#btn-export").onclick=()=>{
+  const payload={meta:{app:"SkillTree Workbench",version:1,exportedAt:new Date().toISOString()},data:state};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="skilltree-backup-"+todayStr()+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  toast(t("exported"));
+};
+$("#btn-import").onclick=()=>$("#import-file").click();
+$("#import-file").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const j=JSON.parse(rd.result);
+      const d=j&&j.data?j.data:j;
+      if(!d||!Array.isArray(d.skills)||!Array.isArray(d.notes)||!Array.isArray(d.todos))throw 0;
+      confirmDialog(t("confirmTitle"),t("confirmImport")).then(ok=>{
+        if(!ok)return;
+        state={lang:state.lang,skills:d.skills,notes:d.notes,todos:d.todos};
+        save(); currentNoteId=null; applyI18n(); renderAll(); toast(t("importOk"));
+      });
+    }catch(err){ toast(t("importErr"),true); }
+    e.target.value="";
+  };
+  rd.readAsText(f);
+});
+
+/* ================= MISC BINDINGS ================= */
+$("#btn-lang").onclick=e=>{ e.stopPropagation(); $("#lang-wrap").classList.toggle("open"); };
+document.addEventListener("click",e=>{ if(!e.target.closest("#lang-wrap"))$("#lang-wrap").classList.remove("open"); });
+$("#menu-fab").onclick=()=>$("#sidebar").classList.toggle("open");
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){ closeDrawer(); $("#modal-veil").classList.remove("open"); $("#lang-wrap").classList.remove("open"); }
+});
+window.addEventListener("resize",()=>{ if(currentView==="tree")fitTree(); });
+
+/* ================= RENDER ALL / INIT ================= */
+function renderAll(){ renderStats(); renderTree(); renderCards(); renderNotes(); renderTodos(); }
+applyI18n();
+renderAll();
+switchView("tree");
+</script>
+</body>
+</html>
