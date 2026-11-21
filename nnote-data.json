@@ -2,7 +2,7 @@
   "meta": {
     "app": "Nnote Workbench",
     "version": 1,
-    "exportedAt": "2026-11-21T19:33:41.183Z"
+    "exportedAt": "2026-11-21T19:39:48.262Z"
   },
   "data": {
     "lang": "zh",
@@ -123,6 +123,15 @@
         "color": "#B48CFF",
         "parentId": "mwqoh12w0j1d54",
         "createdAt": 1795281936883
+      },
+      {
+        "id": "mwqtax824jg8jg",
+        "name": "Life Skill",
+        "desc": "",
+        "level": 20,
+        "color": "#D3FD50",
+        "parentId": null,
+        "createdAt": 1795289983922
       }
     ],
     "notes": [
