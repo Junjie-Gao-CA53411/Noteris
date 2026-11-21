@@ -2,7 +2,7 @@
   "meta": {
     "app": "Nnote Workbench",
     "version": 1,
-    "exportedAt": "2026-11-21T17:09:33.652Z"
+    "exportedAt": "2026-11-21T17:10:47.401Z"
   },
   "data": {
     "lang": "zh",
@@ -77,6 +77,14 @@
       }
     ],
     "todos": [
+      {
+        "id": "mwqnz7cf4wrjqw",
+        "text": "hi hi",
+        "done": false,
+        "pri": "mid",
+        "due": "",
+        "createdAt": 1795281039087
+      },
       {
         "id": "mwqn9l8i8qeofn",
         "text": "完成 SkillTree 上手体验",
