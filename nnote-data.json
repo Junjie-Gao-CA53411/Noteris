@@ -2,7 +2,7 @@
   "meta": {
     "app": "Nnote Workbench",
     "version": 1,
-    "exportedAt": "2026-11-21T17:24:35.098Z"
+    "exportedAt": "2026-11-21T17:25:41.207Z"
   },
   "data": {
     "lang": "zh",
@@ -105,6 +105,24 @@
         "color": "#D85C46",
         "parentId": null,
         "createdAt": 1795281870776
+      },
+      {
+        "id": "mwqohpamp2hi3a",
+        "name": "Ice Skate",
+        "desc": "",
+        "level": 10,
+        "color": "#5FA8C7",
+        "parentId": "mwqoh12w0j1d54",
+        "createdAt": 1795281902158
+      },
+      {
+        "id": "mwqoig377umw85",
+        "name": "Fencing",
+        "desc": "Saber",
+        "level": 20,
+        "color": "#B48CFF",
+        "parentId": "mwqoh12w0j1d54",
+        "createdAt": 1795281936883
       }
     ],
     "notes": [
