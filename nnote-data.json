@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "app": "Nnote Workbench",
+    "version": 1,
+    "exportedAt": "2026-11-21T17:09:00.732Z"
+  },
+  "data": {
+    "lang": "zh",
+    "skills": [
+      {
+        "id": "mwqn9l8h2ntol8",
+        "name": "编程",
+        "desc": "用代码构建世界",
+        "level": 55,
+        "color": "#D3FD50",
+        "parentId": null,
+        "createdAt": 1795279844033
+      },
+      {
+        "id": "mwqn9l8h713ato",
+        "name": "前端开发",
+        "desc": "HTML / CSS / JavaScript / 框架",
+        "level": 70,
+        "color": "#5FA8C7",
+        "parentId": "mwqn9l8h2ntol8",
+        "createdAt": 1795279844033
+      },
+      {
+        "id": "mwqn9l8hnstvfp",
+        "name": "算法",
+        "desc": "数据结构与算法思维",
+        "level": 40,
+        "color": "#FF9E40",
+        "parentId": "mwqn9l8h2ntol8",
+        "createdAt": 1795279844033
+      },
+      {
+        "id": "mwqn9l8huhykoi",
+        "name": "语言学习",
+        "desc": "沟通无国界",
+        "level": 60,
+        "color": "#F472B6",
+        "parentId": null,
+        "createdAt": 1795279844033
+      },
+      {
+        "id": "mwqn9l8h7oxrw8",
+        "name": "英语",
+        "desc": "读、写、说、听",
+        "level": 75,
+        "color": "#4ADE80",
+        "parentId": "mwqn9l8huhykoi",
+        "createdAt": 1795279844033
+      }
+    ],
+    "notes": [
+      {
+        "id": "mwqn9l8i0kofqp",
+        "title": "欢迎使用 SkillTree",
+        "body": "这里的一切数据都只保存在你的浏览器本地（localStorage），随时可以：\n\n· 在「技能树」中创建分支与技能卡牌，拖动滑杆记录熟练度\n· 在「待办清单」里安排每日任务\n· 在「笔记本」中沉淀学习心得\n· 用左下角的导出功能备份为 JSON 文件\n\n开始打造属于你的技能宇宙吧！",
+        "updatedAt": 1795279844033
+      },
+      {
+        "id": "mwqnwv61nnuttv",
+        "title": "Test",
+        "body": "Hihi",
+        "updatedAt": 1795280936413
+      }
+    ],
+    "todos": [
+      {
+        "id": "mwqn9l8i8qeofn",
+        "text": "完成 SkillTree 上手体验",
+        "done": false,
+        "pri": "mid",
+        "due": "2026-11-21",
+        "createdAt": 1795279844033
+      },
+      {
+        "id": "mwqn9l8i4d3afc",
+        "text": "给技能树添加一个新分支",
+        "done": false,
+        "pri": "high",
+        "due": "",
+        "createdAt": 1795279844034
+      },
+      {
+        "id": "mwqn9l8ilafp19",
+        "text": "写下第一篇学习笔记",
+        "done": false,
+        "pri": "low",
+        "due": "",
+        "createdAt": 1795279844035
+      }
+    ]
+  }
+}
