@@ -2,14 +2,14 @@
   "meta": {
     "app": "Nnote Workbench",
     "version": 1,
-    "exportedAt": "2026-11-21T17:13:51.906Z"
+    "exportedAt": "2026-11-21T17:14:57.927Z"
   },
   "data": {
     "lang": "zh",
     "skills": [
       {
         "id": "mwqn9l8h2ntol8",
-        "name": "编程",
+        "name": "Programming",
         "desc": "用代码构建世界",
         "level": 55,
         "color": "#D3FD50",
@@ -27,7 +27,7 @@
       },
       {
         "id": "mwqn9l8hnstvfp",
-        "name": "算法",
+        "name": "Algorithm",
         "desc": "数据结构与算法思维",
         "level": 40,
         "color": "#FF9E40",
@@ -36,7 +36,7 @@
       },
       {
         "id": "mwqn9l8huhykoi",
-        "name": "语言学习",
+        "name": "Language",
         "desc": "沟通无国界",
         "level": 60,
         "color": "#F472B6",
@@ -54,7 +54,7 @@
       },
       {
         "id": "mwqnxpi6jg8j54",
-        "name": "德语",
+        "name": "Deutsch",
         "desc": "",
         "level": 20,
         "color": "#B48CFF",
