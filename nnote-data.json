@@ -2,7 +2,7 @@
   "meta": {
     "app": "Nnote Workbench",
     "version": 1,
-    "exportedAt": "2026-11-21T17:21:04.154Z"
+    "exportedAt": "2026-11-21T17:24:35.098Z"
   },
   "data": {
     "lang": "zh",
@@ -78,6 +78,33 @@
         "color": "#B48CFF",
         "parentId": null,
         "createdAt": 1795281659828
+      },
+      {
+        "id": "mwqod70a20h8x1",
+        "name": "Guitar",
+        "desc": "",
+        "level": 40,
+        "color": "#FACC15",
+        "parentId": "mwqocib8hfwjap",
+        "createdAt": 1795281691834
+      },
+      {
+        "id": "mwqodk066pwp2n",
+        "name": "Piano",
+        "desc": "",
+        "level": 20,
+        "color": "#5FA8C7",
+        "parentId": "mwqocib8hfwjap",
+        "createdAt": 1795281708678
+      },
+      {
+        "id": "mwqoh12w0j1d54",
+        "name": "Sports",
+        "desc": "",
+        "level": 30,
+        "color": "#D85C46",
+        "parentId": null,
+        "createdAt": 1795281870776
       }
     ],
     "notes": [
