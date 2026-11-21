@@ -2,7 +2,7 @@
   "meta": {
     "app": "Nnote Workbench",
     "version": 1,
-    "exportedAt": "2026-11-21T17:14:57.927Z"
+    "exportedAt": "2026-11-21T17:16:41.844Z"
   },
   "data": {
     "lang": "zh",
@@ -18,7 +18,7 @@
       },
       {
         "id": "mwqn9l8h713ato",
-        "name": "前端开发",
+        "name": "Frontend",
         "desc": "HTML / CSS / JavaScript / 框架",
         "level": 70,
         "color": "#5FA8C7",
