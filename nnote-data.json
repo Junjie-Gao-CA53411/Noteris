@@ -2,7 +2,7 @@
   "meta": {
     "app": "Nnote Workbench",
     "version": 1,
-    "exportedAt": "2026-11-21T17:09:00.732Z"
+    "exportedAt": "2026-11-21T17:09:33.652Z"
   },
   "data": {
     "lang": "zh",
@@ -51,6 +51,15 @@
         "color": "#4ADE80",
         "parentId": "mwqn9l8huhykoi",
         "createdAt": 1795279844033
+      },
+      {
+        "id": "mwqnxpi6jg8j54",
+        "name": "德语",
+        "desc": "",
+        "level": 20,
+        "color": "#B48CFF",
+        "parentId": "mwqn9l8huhykoi",
+        "createdAt": 1795280969310
       }
     ],
     "notes": [
