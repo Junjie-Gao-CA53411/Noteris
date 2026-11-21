@@ -2,7 +2,7 @@
   "meta": {
     "app": "Nnote Workbench",
     "version": 1,
-    "exportedAt": "2026-11-21T19:39:48.262Z"
+    "exportedAt": "2026-11-21T19:41:10.366Z"
   },
   "data": {
     "lang": "zh",
@@ -132,6 +132,15 @@
         "color": "#D3FD50",
         "parentId": null,
         "createdAt": 1795289983922
+      },
+      {
+        "id": "mwqtcokkqu5sks",
+        "name": "Driving",
+        "desc": "- British Provisional Driving License\n- Chinese Driving License",
+        "level": 60,
+        "color": "#4ADE80",
+        "parentId": null,
+        "createdAt": 1795290066020
       }
     ],
     "notes": [
