@@ -2,7 +2,7 @@
   "meta": {
     "app": "Nnote Workbench",
     "version": 1,
-    "exportedAt": "2026-11-21T17:19:49.337Z"
+    "exportedAt": "2026-11-21T17:21:04.154Z"
   },
   "data": {
     "lang": "zh",
@@ -69,6 +69,15 @@
         "color": "#FF9E40",
         "parentId": "mwqn9l8huhykoi",
         "createdAt": 1795281585000
+      },
+      {
+        "id": "mwqocib8hfwjap",
+        "name": "Music",
+        "desc": "",
+        "level": 40,
+        "color": "#B48CFF",
+        "parentId": null,
+        "createdAt": 1795281659828
       }
     ],
     "notes": [
