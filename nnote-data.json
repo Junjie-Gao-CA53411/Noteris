@@ -2,7 +2,7 @@
   "meta": {
     "app": "Nnote Workbench",
     "version": 1,
-    "exportedAt": "2026-11-21T19:41:10.366Z"
+    "exportedAt": "2026-11-22T00:56:07.933Z"
   },
   "data": {
     "lang": "zh",
@@ -123,24 +123,6 @@
         "color": "#B48CFF",
         "parentId": "mwqoh12w0j1d54",
         "createdAt": 1795281936883
-      },
-      {
-        "id": "mwqtax824jg8jg",
-        "name": "Life Skill",
-        "desc": "",
-        "level": 20,
-        "color": "#D3FD50",
-        "parentId": null,
-        "createdAt": 1795289983922
-      },
-      {
-        "id": "mwqtcokkqu5sks",
-        "name": "Driving",
-        "desc": "- British Provisional Driving License\n- Chinese Driving License",
-        "level": 60,
-        "color": "#4ADE80",
-        "parentId": null,
-        "createdAt": 1795290066020
       }
     ],
     "notes": [
@@ -161,6 +143,12 @@
         "title": "hihi",
         "body": "",
         "updatedAt": 1795285210562
+      },
+      {
+        "id": "mwr4lj8cir19dw",
+        "title": "没有",
+        "body": "m\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+        "updatedAt": 1795308967589
       }
     ],
     "todos": [
