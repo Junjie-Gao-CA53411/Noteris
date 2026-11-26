@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "app": "Noteris Workbench",
+    "version": 2,
+    "exportedAt": "2026-11-26T00:48:55.646Z"
+  },
+  "lang": "zh",
+  "folders": [],
+  "dash": [
+    "stats",
+    "todos",
+    "notes",
+    "calmini",
+    "habits",
+    "skills"
+  ]
+}
