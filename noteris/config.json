@@ -2,7 +2,7 @@
   "meta": {
     "app": "Noteris Workbench",
     "version": 2,
-    "exportedAt": "2026-11-27T06:45:02.194Z"
+    "exportedAt": "2026-11-27T06:46:17.545Z"
   },
   "lang": "en",
   "folders": [],
@@ -11,7 +11,6 @@
     "todos",
     "notes",
     "calmini",
-    "habits",
     "skills"
   ]
 }
