@@ -2222,11 +2222,7 @@ async function driveDownload(f){
   try{
     const j=await ghFetchJSON(`/repos/${ghCfg.repo}/contents/${encodeURI(f.path)}?ref=${encodeURIComponent(ghCfg.branch)}`);
     if(!j||!j.content){ toast(t("ghErr")+"404",true); return; }
-    const blob=new Blob([bufFromB64(j.content)],{type:"application/octet-stream"});
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(blob); a.download=f.name;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    await saveBlob(new Blob([bufFromB64(j.content)],{type:"application/octet-stream"}),f.name);
   }catch(e){ toast(t("ghErr")+(e.message||""),true); }
 }
 function driveDelete(f){
@@ -2260,6 +2256,25 @@ $("#drive-file").addEventListener("change",async e=>{
     driveRefresh();
   }
 });
+
+/* Save a Blob as a file. Capacitor: native write + share sheet (WebViews
+   swallow <a download> blob clicks). Elsewhere: anchor click, removed later. */
+async function saveBlob(blob,name){
+  try{
+    if(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&Capacitor.Plugins&&Capacitor.Plugins.Filesystem){
+      const b64=await new Promise(res=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result.split(",")[1]); fr.readAsDataURL(blob); });
+      const w=await Capacitor.Plugins.Filesystem.writeFile({path:"Noteris/"+name,data:b64,directory:"CACHE",recursive:true});
+      if(Capacitor.Plugins.Share&&Capacitor.Plugins.Share.share){
+        try{ await Capacitor.Plugins.Share.share({title:name,url:w.uri}); }catch(_){}
+        return;
+      }
+    }
+  }catch(e){}
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ a.remove(); URL.revokeObjectURL(a.href); },5000);
+}
 
 /* ================= LAN TRANSFER (WebRTC, fully offline) ================= */
 /* No CDN, no signaling server: SDP codes are exchanged manually (paste/copy).
@@ -2524,11 +2539,7 @@ function trOnMsg(e){
           });
         }catch(err){ toast(t("trBadData"),true); }
       }else{
-        const blob=new Blob([u8],{type:"application/octet-stream"});
-        const a=document.createElement("a");
-        a.href=URL.createObjectURL(blob); a.download=trRx.name||"file";
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+        saveBlob(new Blob([u8],{type:"application/octet-stream"}),trRx.name||"file");
         trLog(t("trRecvDone")+": "+(trRx.name||"file")+" ("+fmtSize(u8.length)+")");
       }
     }

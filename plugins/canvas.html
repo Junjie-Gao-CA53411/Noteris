@@ -1,0 +1,187 @@
+<!--NP-META
+{"id": "canvas", "version": "1.0.0", "minCore": 1,
+ "title": {"zh": "画板", "en": "Canvas", "de": "Leinwand", "ru": "Холст", "ko": "캔버스", "fr": "Canvas", "es": "Lienzo"},
+ "desc": {"zh": "随手画画，可导出到本地或云盘", "en": "Sketch freely, export locally or to your drive", "de": "Frei skizzieren — lokal oder ins Cloud-Laufwerk exportieren", "ru": "Рисуй свободно, экспортируй локально или в облако", "ko": "자유롭게 그리기 — 로컬 또는 클라우드로 저장할 수 있습니다", "fr": "Dessine librement, exporte localement ou dans le cloud", "es": "Dibuja libremente, exporta localmente o a la nube"},
+ "icon": "<svg viewBox=\"0 0 24 24\"><path d=\"m14.5 4.5 5 5L8 21H3v-5L14.5 4.5z\"/><path d=\"m12 7 5 5\"/></svg>"}
+-->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Canvas</title>
+<style>
+.p-head{padding:0 0 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.p-head h1{font-size:22px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.p-head small{font-size:12.5px;color:var(--faint);font-weight:400}
+.cv-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--r-md);padding:8px 12px;margin-bottom:12px}
+.cv-sw{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;flex:none;transition:transform .12s var(--ease)}
+.cv-sw.on{border-color:var(--text);transform:scale(1.15)}
+.cv-color{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:none;padding:2px;cursor:pointer}
+.cv-size{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--faint);flex:none}
+.cv-size input[type=range]{width:110px;accent-color:var(--accent)}
+.cv-tool{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:500;color:var(--muted)}
+.cv-tool.on{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.cv-stage{flex:1;min-height:0;position:relative;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-md);overflow:hidden}
+.cv-stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
+.cv-exp{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:12px}
+.cv-exp .sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:500;color:var(--muted);transition:all .15s var(--ease)}
+.btn:hover{border-color:var(--faint);color:var(--text)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#0A0B0D;font-weight:600}
+.btn-primary:hover{filter:brightness(1.08);color:#0A0B0D}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.cv-msg{font-size:12.5px;color:var(--faint)}
+@media (max-width:640px){
+  .cv-size input[type=range]{width:80px}
+  .btn{padding:8px 12px;font-size:12.5px}
+}
+</style>
+</head>
+<body>
+<div class="p-head"><h1><span class="pt"></span><small class="ps"></small></h1></div>
+<div class="cv-bar">
+  <span id="cv-swatches" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+  <input type="color" class="cv-color" id="cv-color" value="#1f6feb">
+  <span class="cv-size"><span id="cv-size-v">4</span><input type="range" id="cv-size" min="1" max="40" value="4"></span>
+  <button class="cv-tool on" id="cv-pen"></button>
+  <button class="cv-tool" id="cv-eraser"></button>
+  <button class="cv-tool" id="cv-undo"></button>
+  <button class="cv-tool" id="cv-clear"></button>
+</div>
+<div class="cv-stage"><canvas id="cv"></canvas></div>
+<div class="cv-exp">
+  <span class="cv-msg" id="cv-msg"></span>
+  <span class="sp"></span>
+  <button class="btn" id="cv-local"></button>
+  <button class="btn" id="cv-repo"></button>
+  <button class="btn btn-primary" id="cv-both"></button>
+</div>
+<script>
+"use strict";
+var I18N={
+"zh": {"cvsTitle":"画板","cvsSub":"随手画画，可导出到本地或云盘","cvsPen":"画笔","cvsEraser":"橡皮","cvsUndo":"撤销","cvsClear":"清空","cvsSize":"笔刷大小","cvsLocal":"导出到本地","cvsRepo":"导出到云盘","cvsBoth":"两个都导出","cvsExported":"已导出：{name}","cvsNeedCfg":"导出到云盘需要先在设置里配置 GitHub 同步","cvsConfirmClear":"确定清空画布吗？此操作不可撤销。","cvsCleared":"已清空","cvsEmpty":"画布还是空的，先画点什么吧","cvsErr":"导出失败："},
+"en": {"cvsTitle":"Canvas","cvsSub":"Sketch freely, export locally or to your drive","cvsPen":"Pen","cvsEraser":"Eraser","cvsUndo":"Undo","cvsClear":"Clear","cvsSize":"Brush size","cvsLocal":"Export locally","cvsRepo":"Export to drive","cvsBoth":"Export both","cvsExported":"Exported: {name}","cvsNeedCfg":"Exporting to the drive needs GitHub sync configured in Settings first","cvsConfirmClear":"Clear the whole canvas? This cannot be undone.","cvsCleared":"Cleared","cvsEmpty":"The canvas is still empty — draw something first","cvsErr":"Export failed: "},
+"de": {"cvsTitle":"Leinwand","cvsSub":"Frei skizzieren — lokal oder ins Cloud-Laufwerk exportieren","cvsPen":"Stift","cvsEraser":"Radierer","cvsUndo":"Rückgängig","cvsClear":"Leeren","cvsSize":"Pinselgröße","cvsLocal":"Lokal exportieren","cvsRepo":"Ins Laufwerk exportieren","cvsBoth":"Beides exportieren","cvsExported":"Exportiert: {name}","cvsNeedCfg":"Der Export ins Laufwerk braucht zuerst die GitHub-Synchronisation in den Einstellungen","cvsConfirmClear":"Die ganze Leinwand leeren? Nicht rückgängig machbar.","cvsCleared":"Geleert","cvsEmpty":"Die Leinwand ist noch leer — zeichne erst etwas","cvsErr":"Export fehlgeschlagen: "},
+"ru": {"cvsTitle":"Холст","cvsSub":"Рисуй свободно, экспортируй локально или в облако","cvsPen":"Кисть","cvsEraser":"Ластик","cvsUndo":"Отменить","cvsClear":"Очистить","cvsSize":"Размер кисти","cvsLocal":"Экспорт локально","cvsRepo":"Экспорт в облако","cvsBoth":"Экспортировать оба","cvsExported":"Экспортировано: {name}","cvsNeedCfg":"Для экспорта в облако сначала настрой синхронизацию GitHub в настройках","cvsConfirmClear":"Очистить весь холст? Это нельзя отменить.","cvsCleared":"Очищено","cvsEmpty":"Холст ещё пуст — сначала что-нибудь нарисуй","cvsErr":"Ошибка экспорта: "},
+"ko": {"cvsTitle":"캔버스","cvsSub":"자유롭게 그리기 — 로컬 또는 클라우드로 저장할 수 있습니다","cvsPen":"펜","cvsEraser":"지우개","cvsUndo":"실행 취소","cvsClear":"전체 지우기","cvsSize":"붓 크기","cvsLocal":"로컬로 저장","cvsRepo":"클라우드로 저장","cvsBoth":"둘 다 저장","cvsExported":"저장 완료: {name}","cvsNeedCfg":"클라우드 저장은 먼저 설정에서 GitHub 동기화를 구성해야 합니다","cvsConfirmClear":"캔버스 전체를 지울까요? 되돌릴 수 없습니다.","cvsCleared":"지웠습니다","cvsEmpty":"캔버스가 아직 비어 있습니다 — 먼저 그려 보세요","cvsErr":"저장 실패: "},
+"fr": {"cvsTitle":"Canvas","cvsSub":"Dessine librement, exporte localement ou dans le cloud","cvsPen":"Pinceau","cvsEraser":"Gomme","cvsUndo":"Annuler","cvsClear":"Effacer","cvsSize":"Taille du pinceau","cvsLocal":"Exporter localement","cvsRepo":"Exporter dans le cloud","cvsBoth":"Exporter les deux","cvsExported":"Exporté : {name}","cvsNeedCfg":"L'export vers le cloud nécessite la synchronisation GitHub dans les réglages","cvsConfirmClear":"Tout effacer ? Action irréversible.","cvsCleared":"Effacé","cvsEmpty":"Le canvas est encore vide — dessine quelque chose d'abord","cvsErr":"Échec de l'export : "},
+"es": {"cvsTitle":"Lienzo","cvsSub":"Dibuja libremente, exporta localmente o a la nube","cvsPen":"Pincel","cvsEraser":"Borrador","cvsUndo":"Deshacer","cvsClear":"Borrar","cvsSize":"Tamaño del pincel","cvsLocal":"Exportar localmente","cvsRepo":"Exportar a la nube","cvsBoth":"Exportar ambos","cvsExported":"Exportado: {name}","cvsNeedCfg":"Exportar a la nube requiere primero la sincronización de GitHub en Ajustes","cvsConfirmClear":"¿Borrar todo el lienzo? No se puede deshacer.","cvsCleared":"Borrado","cvsEmpty":"El lienzo sigue vacío — dibuja algo primero","cvsErr":"Error al exportar: "}
+};
+var L="zh",GH=null;
+var $=function(s){return document.querySelector(s);};
+function t(k){var a=I18N[L];return (a&&a[k]!=null)?a[k]:(I18N.zh[k]!=null?I18N.zh[k]:k);}
+function tf(k,r){var s=t(k);for(var x in r)s=s.split("{"+x+"}").join(r[x]);return s;}
+function toast(m,e){np.call("toast",{msg:m,isErr:!!e});}
+function msg(s){$("#cv-msg").textContent=s||"";}
+
+var COLORS=["#0A0B0D","#E5484D","#F76B15","#FFC53D","#30A46C","#1F6FEB","#8E4EC6","#FFFFFF"];
+var cv=$("#cv"),cx=cv.getContext("2d"),stage=$(".cv-stage");
+var color="#1F6FEB",size=4,mode="pen",drawing=false,hasInk=false,last=null;
+var undoStack=[],MAX_UNDO=40;
+
+function resize(){
+  var url=null;
+  if(hasInk)url=cv.toDataURL();
+  var r=stage.getBoundingClientRect();
+  var dpr=window.devicePixelRatio||1;
+  cv.width=Math.max(1,Math.round(r.width*dpr));
+  cv.height=Math.max(1,Math.round(r.height*dpr));
+  cx.setTransform(dpr,0,0,dpr,0,0);
+  cx.lineCap="round";cx.lineJoin="round";
+  cx.fillStyle="#FFFFFF";cx.fillRect(0,0,r.width,r.height);
+  if(url){var img=new Image();img.onload=function(){cx.drawImage(img,0,0,r.width,r.height);};img.src=url;}
+}
+function pos(e){var r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
+function snap(){if(!hasInk)return;try{undoStack.push(cv.toDataURL());if(undoStack.length>MAX_UNDO)undoStack.shift();}catch(_){}}
+function restore(url){var img=new Image();img.onload=function(){var r=stage.getBoundingClientRect();cx.fillStyle="#FFFFFF";cx.fillRect(0,0,r.width,r.height);cx.drawImage(img,0,0,r.width,r.height);};img.src=url;}
+function stroke(a,b){
+  cx.globalCompositeOperation=mode==="eraser"?"destination-out":"source-over";
+  cx.strokeStyle=color;cx.lineWidth=mode==="eraser"?size*3:size;
+  cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke();
+  cx.globalCompositeOperation="source-over";
+}
+cv.addEventListener("pointerdown",function(e){e.preventDefault();snap();drawing=true;last=pos(e);cv.setPointerCapture(e.pointerId);stroke(last,{x:last.x+.01,y:last.y+.01});hasInk=true;});
+cv.addEventListener("pointermove",function(e){if(!drawing)return;var p=pos(e);stroke(last,p);last=p;});
+var up=function(){drawing=false;};
+cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+
+function swatches(){
+  var box=$("#cv-swatches");box.innerHTML="";
+  COLORS.forEach(function(c){
+    var b=document.createElement("button");
+    b.className="cv-sw"+(c.toUpperCase()===color.toUpperCase()?" on":"");
+    b.style.background=c;b.title=c;
+    b.onclick=function(){color=c;mode="pen";syncTools();swatches();};
+    box.appendChild(b);
+  });
+}
+function syncTools(){
+  $("#cv-pen").classList.toggle("on",mode==="pen");
+  $("#cv-eraser").classList.toggle("on",mode==="eraser");
+}
+$("#cv-color").addEventListener("input",function(e){color=e.target.value;mode="pen";syncTools();swatches();});
+$("#cv-size").addEventListener("input",function(e){size=+e.target.value;$("#cv-size-v").textContent=size;});
+$("#cv-pen").onclick=function(){mode="pen";syncTools();};
+$("#cv-eraser").onclick=function(){mode="eraser";syncTools();};
+$("#cv-undo").onclick=function(){var url=undoStack.pop();if(url){restore(url);msg(t("cvsUndo")+" ✓");}else msg(t("cvsUndo")+" —");};
+$("#cv-clear").onclick=async function(){
+  var ok=await np.call("confirm",{title:t("cvsClear"),msg:t("cvsConfirmClear")});
+  if(!ok)return;
+  undoStack=[];hasInk=false;
+  var r=stage.getBoundingClientRect();
+  cx.fillStyle="#FFFFFF";cx.fillRect(0,0,r.width,r.height);
+  msg(t("cvsCleared"));
+};
+function stamp(){var d=new Date(),p=function(n){return (n<10?"0":"")+n;};return "canvas-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+".png";}
+function pngB64(){
+  var url=cv.toDataURL("image/png");
+  return {name:stamp(),b64:url.slice(url.indexOf(",")+1)};
+}
+async function gj(path,method,body){
+  try{var r=await np.call("ghFetch",{path:path,method:method,body:body});return r.data;}
+  catch(e){if(String(e&&e.message||"").indexOf("404")>=0)return null;throw e;}
+}
+async function uploadRepo(p){
+  if(!GH||!GH.repo){toast(t("cvsNeedCfg"),true);return false;}
+  var path=(GH.root?GH.root+"/drive/":"drive/")+p.name;
+  var cur=await gj("/repos/"+GH.repo+"/contents/"+encodeURI(path)+"?ref="+encodeURIComponent(GH.branch));
+  var body={message:"Noteris canvas: export "+p.name,content:p.b64,branch:GH.branch};
+  if(cur&&cur.sha)body.sha=cur.sha;
+  await gj("/repos/"+GH.repo+"/contents/"+encodeURI(path),"PUT",body);
+  return true;
+}
+async function doExport(where){
+  if(!hasInk){toast(t("cvsEmpty"),true);return;}
+  msg("");
+  try{
+    var p=pngB64();
+    if(where!=="local"){
+      var up=await uploadRepo(p);
+      if(!up&&where==="repo")return;
+    }
+    if(where!=="repo"){ await np.call("saveFile",{name:p.name,base64:p.b64}); }
+    msg(tf("cvsExported",{name:p.name}));
+  }catch(e){toast(t("cvsErr")+(e.message||""),true);}
+}
+$("#cv-local").onclick=function(){doExport("local");};
+$("#cv-repo").onclick=function(){doExport("repo");};
+$("#cv-both").onclick=function(){doExport("both");};
+
+(async function(){
+  var env=await np.call("getEnv");L=env.lang||"zh";GH=env.gh||null;
+  $("#cv-pen").textContent=t("cvsPen");
+  $("#cv-eraser").textContent=t("cvsEraser");
+  $("#cv-undo").textContent=t("cvsUndo");
+  $("#cv-clear").textContent=t("cvsClear");
+  $("#cv-local").textContent=t("cvsLocal");
+  $("#cv-repo").textContent=t("cvsRepo");
+  $("#cv-both").textContent=t("cvsBoth");
+  $(".pt").textContent=t("cvsTitle");
+  $(".ps").textContent=t("cvsSub");
+  window.addEventListener("resize",resize);
+  resize();swatches();syncTools();
+})();
+<\/script>
+</body>
+</html>
