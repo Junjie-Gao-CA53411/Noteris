@@ -1,5 +1,5 @@
 <!--NP-META
-{"id": "canvas", "version": "1.0.0", "minCore": 1,
+{"id": "canvas", "version": "1.1.0", "minCore": 1,
  "title": {"zh": "画板", "en": "Canvas", "de": "Leinwand", "ru": "Холст", "ko": "캔버스", "fr": "Canvas", "es": "Lienzo"},
  "desc": {"zh": "随手画画，可导出到本地或云盘", "en": "Sketch freely, export locally or to your drive", "de": "Frei skizzieren — lokal oder ins Cloud-Laufwerk exportieren", "ru": "Рисуй свободно, экспортируй локально или в облако", "ko": "자유롭게 그리기 — 로컬 또는 클라우드로 저장할 수 있습니다", "fr": "Dessine librement, exporte localement ou dans le cloud", "es": "Dibuja libremente, exporta localmente o a la nube"},
  "icon": "<svg viewBox=\"0 0 24 24\"><path d=\"m14.5 4.5 5 5L8 21H3v-5L14.5 4.5z\"/><path d=\"m12 7 5 5\"/></svg>"}
@@ -90,11 +90,21 @@ function resize(){
   cx.setTransform(dpr,0,0,dpr,0,0);
   cx.lineCap="round";cx.lineJoin="round";
   cx.fillStyle="#FFFFFF";cx.fillRect(0,0,r.width,r.height);
-  if(url){var img=new Image();img.onload=function(){cx.drawImage(img,0,0,r.width,r.height);};img.src=url;}
+  if(url){var img=new Image();img.onload=function(){cx.setTransform(1,0,0,1,0,0);cx.drawImage(img,0,0,cv.width,cv.height);cx.setTransform(dpr,0,0,dpr,0,0);};img.src=url;}
 }
 function pos(e){var r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
-function snap(){if(!hasInk)return;try{undoStack.push(cv.toDataURL());if(undoStack.length>MAX_UNDO)undoStack.shift();}catch(_){}}
-function restore(url){var img=new Image();img.onload=function(){var r=stage.getBoundingClientRect();cx.fillStyle="#FFFFFF";cx.fillRect(0,0,r.width,r.height);cx.drawImage(img,0,0,r.width,r.height);};img.src=url;}
+function dpr(){return window.devicePixelRatio||1;}
+/* All full-canvas pixel ops run in device pixels with the identity transform.
+   The drawing transform is scale(dpr); using CSS-pixel rects here would only
+   cover the top-left region once the viewport/stage size changes on mobile. */
+function blank(){
+  cx.setTransform(1,0,0,1,0,0);
+  cx.fillStyle="#FFFFFF";cx.fillRect(0,0,cv.width,cv.height);
+  cx.setTransform(dpr(),0,0,dpr(),0,0);
+}
+function pushBlank(){try{undoStack.push(cv.toDataURL());if(undoStack.length>MAX_UNDO)undoStack.shift();}catch(_){}}
+function snap(){if(!hasInk)return;pushBlank();}
+function restore(url){var img=new Image();img.onload=function(){blank();cx.setTransform(1,0,0,1,0,0);cx.drawImage(img,0,0,cv.width,cv.height);cx.setTransform(dpr(),0,0,dpr(),0,0);};img.src=url;}
 function stroke(a,b){
   cx.globalCompositeOperation=mode==="eraser"?"destination-out":"source-over";
   cx.strokeStyle=color;cx.lineWidth=mode==="eraser"?size*3:size;
@@ -129,8 +139,8 @@ $("#cv-clear").onclick=async function(){
   var ok=await np.call("confirm",{title:t("cvsClear"),msg:t("cvsConfirmClear")});
   if(!ok)return;
   undoStack=[];hasInk=false;
-  var r=stage.getBoundingClientRect();
-  cx.fillStyle="#FFFFFF";cx.fillRect(0,0,r.width,r.height);
+  blank();
+  pushBlank(); /* allow undoing the clear itself and the first stroke after it */
   msg(t("cvsCleared"));
 };
 function stamp(){var d=new Date(),p=function(n){return (n<10?"0":"")+n;};return "canvas-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+".png";}
@@ -185,7 +195,10 @@ $("#cv-both").onclick=function(){doExport("both");};
   $(".pt").textContent=t("cvsTitle");
   $(".ps").textContent=t("cvsSub");
   window.addEventListener("resize",resize);
+  if(window.visualViewport)window.visualViewport.addEventListener("resize",resize);
+  if(window.ResizeObserver)new ResizeObserver(function(){resize();}).observe(stage);
   resize();swatches();syncTools();
+  pushBlank(); /* the initial blank canvas must be undoable so the very first stroke can be undone */
 })();
 <\/script>
 </body>
