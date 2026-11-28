@@ -1,5 +1,5 @@
 <!--NP-META
-{"id": "npalette", "version": "1.0.0", "minCore": 1,
+{"id": "npalette", "version": "1.0.1", "minCore": 1,
  "title": {"zh": "N调色", "en": "N Palette", "de": "N Palette", "ru": "N Палитра", "ko": "N 팔레트", "fr": "N Palette", "es": "N Paleta"},
  "desc": {"zh": "专业调色台：影调、曲线、HSL、分离调色、裁剪与导出", "en": "Pro grading desk: tone, curves, HSL, split-tone, crop & export", "de": "Profigrading: Töne, Kurven, HSL, Split-Toning, Crop & Export", "ru": "Проф. грейдинг: тон, кривые, HSL, сплит-тон, кроп и экспорт", "ko": "프로 그레이딩: 톤, 커브, HSL, 스플릿 토닝, 크롭 및 내보내기", "fr": "Étalonnage pro : tons, courbes, HSL, ton séparé, recadrage, export", "es": "Gradación pro: tono, curvas, HSL, tono dividido, recorte y exportación"},
  "icon": "<svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 3a9 9 0 0 1 0 18\" fill=\"currentColor\" stroke=\"none\" opacity=\".35\"/><circle cx=\"9\" cy=\"10\" r=\"1.3\"/><circle cx=\"14.5\" cy=\"13\" r=\"1.3\"/><circle cx=\"10\" cy=\"15.5\" r=\"1\"/></svg>"}
@@ -22,7 +22,8 @@
 .np-tbtn:focus-visible,.np-tabs button:focus-visible,.np-handle:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .np-spacer{flex:1}
 #hist{display:block;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-sm)}
-.np-main{flex:1;min-height:0;position:relative;overflow:hidden;background:var(--bg-2)}
+.np-main{flex:1;min-height:0;min-width:0;position:relative;display:flex;flex-direction:row;overflow:hidden;background:var(--bg-2)}
+.np-stage{flex:1;min-width:0;position:relative}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #gl.panning{cursor:grabbing}
 .np-zoom{position:absolute;right:10px;bottom:34px;display:flex;flex-direction:column;gap:6px;z-index:5}
@@ -49,7 +50,7 @@
 .np-drop{position:absolute;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);border:3px dashed var(--accent);border-radius:var(--r-md);margin:10px;color:var(--accent);font-size:16px;font-weight:700;pointer-events:none}
 .np-drop.on{display:flex}
 /* side / drawer panel */
-.np-panel{position:absolute;top:0;right:0;bottom:0;width:302px;display:flex;flex-direction:column;background:var(--bg);border-left:1px solid var(--border-soft);z-index:8}
+.np-panel{position:relative;width:302px;flex:none;min-height:0;display:flex;flex-direction:column;background:var(--bg);border-left:1px solid var(--border-soft);z-index:8}
 .np-handle{display:none}
 .np-tabs{display:flex;gap:2px;padding:8px 8px 0;border-bottom:1px solid var(--border-soft);overflow-x:auto;flex:none}
 .np-tabs button{padding:7px 11px;font-size:12.5px;font-weight:600;color:var(--faint);border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;white-space:nowrap}
@@ -100,7 +101,7 @@
 .np-fail.on{display:flex}
 /* mobile: panel becomes bottom drawer */
 @media (max-width:720px){
-  .np-panel{top:auto;left:0;right:0;bottom:0;width:auto;height:47%;border-left:none;border-top:1px solid var(--border);border-radius:14px 14px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.4)}
+  .np-panel{position:absolute;top:auto;left:0;right:0;bottom:0;width:auto;height:47%;border-left:none;border-top:1px solid var(--border);border-radius:14px 14px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.4)}
   .np-panel.full{height:86%}
   .np-handle{display:block;padding:8px 0 2px;cursor:pointer;touch-action:none;flex:none}
   .np-handle::before{content:"";display:block;width:44px;height:4px;border-radius:4px;background:var(--border);margin:0 auto}
@@ -132,6 +133,7 @@
   <canvas id="hist" width="132" height="44"></canvas>
 </div>
 <div class="np-main" id="npMain">
+ <div class="np-stage">
   <canvas id="gl"></canvas>
   <div class="np-splitline" id="splitLine"></div>
   <div class="np-zoom">
@@ -165,6 +167,7 @@
       <button class="np-btn" id="em-s2"></button>
     </div>
   </div>
+ </div>
   <div class="np-panel" id="panel">
     <div class="np-handle" id="handle" role="button" aria-label="drawer"></div>
     <div class="np-tabs" id="tabs"></div>
@@ -174,6 +177,7 @@
 <input type="file" id="file" accept="image/*" hidden>
 <input type="file" id="file2" accept="image/*" hidden>
 <script>
+"use strict";
 "use strict";
 /* ================= i18n ================= */
 const I18N={
@@ -952,14 +956,15 @@ function sortPts(){S.curves[curveCh].sort((a,b)=>a[0]-b[0]);}
 /* ================= view: zoom / pan / compare ================= */
 function cssToOriented(cx2,cy2){
   const cv=canvasCss();
-  const vx=cx2/cv.w-.5,vy=cy2/cv.h-.5;
+  const vx=cx2/cv.w-.5,vy=.5-cy2/cv.h;
   return[view.cx+vx*view.fx,view.cy+vy*view.fy];
 }
 function zoomAt(cx2,cy2,f){
   const o=cssToOriented(cx2,cy2);
   view.fx/=f;view.fy/=f;
-  view.cx=o.x-(cx2/canvasCss().w-.5)*view.fx;
-  view.cy=o.y-(cy2/canvasCss().h-.5)*view.fy;
+  if(view.fx>fitFx){view.fy*=fitFx/view.fx;view.fx=fitFx;}
+  view.cx=o[0]-(cx2/canvasCss().w-.5)*view.fx;
+  view.cy=o[1]-(.5-cy2/canvasCss().h)*view.fy;
   render();
 }
 function zoomCenter(f){zoomAt(canvasCss().w/2,canvasCss().h/2,f);}
@@ -993,7 +998,7 @@ function bindView(){
     if(mode==="pan"){
       const cv=canvasCss();
       view.cx-=(x-lx)/cv.w*view.fx;
-      view.cy-=(y-ly)/cv.h*view.fy;
+      view.cy+=(y-ly)/cv.h*view.fy;
       lx=x;ly=y;render();
     }else if(mode==="split"){splitPxCss=x;render();}
   });
@@ -1063,7 +1068,7 @@ function bindCropDrag(){
   const start=(e,hd)=>{
     mode=hd||"move";
     $("#csel").setPointerCapture(e.pointerId);
-    const r=$("#npMain").getBoundingClientRect();
+    const r=$("#cropUI").getBoundingClientRect();
     ox=e.clientX-r.left;oy=e.clientY-r.top;
     ostart={...cropSel};
     e.preventDefault();e.stopPropagation();
@@ -1075,7 +1080,7 @@ function bindCropDrag(){
   const csel=$("#csel");
   csel.addEventListener("pointermove",e=>{
     if(!mode)return;
-    const r=$("#npMain").getBoundingClientRect();
+    const r=$("#cropUI").getBoundingClientRect();
     const x=e.clientX-r.left,y=e.clientY-r.top;
     const dx=x-ox,dy=y-oy;
     const cv=canvasCss();
@@ -1282,11 +1287,21 @@ function webglFallback(){
   bakeLuts();
   applyLang();
   bindTop();bindView();bindCrop();bindCropDrag();bindIO();bindDrawer();
-  window.addEventListener("resize",()=>{if(srcImg){render();layoutCropIf();}});
+  let rszT=0;
+  const refitLater=()=>{clearTimeout(rszT);rszT=setTimeout(()=>{
+    if(!srcImg)return;
+    const z=Math.max(fitFx/Math.max(view.fx,1e-9),1);
+    const cx=view.cx,cy=view.cy;
+    fitView();
+    view.fx=fitFx/z;view.fy=view.fy/z;
+    view.cx=cx;view.cy=cy;
+    render();layoutCropIf();
+  },120);};
+  window.addEventListener("resize",refitLater);
+  if(window.visualViewport)window.visualViewport.addEventListener("resize",refitLater);
   if(!glOK)webglFallback();
 })();
 function layoutCropIf(){if($("#cropUI").classList.contains("on"))layoutCrop();}
-
 </script>
 </body>
 </html>
