@@ -1,5 +1,5 @@
 <!--NP-META
-{"id": "npalette", "version": "1.0.1", "minCore": 1,
+{"id": "npalette", "version": "1.1.1", "minCore": 1,
  "title": {"zh": "N调色", "en": "N Palette", "de": "N Palette", "ru": "N Палитра", "ko": "N 팔레트", "fr": "N Palette", "es": "N Paleta"},
  "desc": {"zh": "专业调色台：影调、曲线、HSL、分离调色、裁剪与导出", "en": "Pro grading desk: tone, curves, HSL, split-tone, crop & export", "de": "Profigrading: Töne, Kurven, HSL, Split-Toning, Crop & Export", "ru": "Проф. грейдинг: тон, кривые, HSL, сплит-тон, кроп и экспорт", "ko": "프로 그레이딩: 톤, 커브, HSL, 스플릿 토닝, 크롭 및 내보내기", "fr": "Étalonnage pro : tons, courbes, HSL, ton séparé, recadrage, export", "es": "Gradación pro: tono, curvas, HSL, tono dividido, recorte y exportación"},
  "icon": "<svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 3a9 9 0 0 1 0 18\" fill=\"currentColor\" stroke=\"none\" opacity=\".35\"/><circle cx=\"9\" cy=\"10\" r=\"1.3\"/><circle cx=\"14.5\" cy=\"13\" r=\"1.3\"/><circle cx=\"10\" cy=\"15.5\" r=\"1\"/></svg>"}
@@ -24,6 +24,7 @@
 #hist{display:block;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:var(--r-sm)}
 .np-main{flex:1;min-height:0;min-width:0;position:relative;display:flex;flex-direction:row;overflow:hidden;background:var(--bg-2)}
 .np-stage{flex:1;min-width:0;position:relative}
+.np-view{position:absolute;inset:0;overflow:hidden}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #gl.panning{cursor:grabbing}
 .np-zoom{position:absolute;right:10px;bottom:34px;display:flex;flex-direction:column;gap:6px;z-index:5}
@@ -144,6 +145,7 @@
 </div>
 <div class="np-main" id="npMain">
  <div class="np-stage">
+  <div class="np-view" id="view">
   <canvas id="gl"></canvas>
   <div class="np-splitline" id="splitLine"></div>
   <div class="np-zoom">
@@ -168,6 +170,7 @@
     </div>
   </div>
   <div class="np-drop" id="dropVeil"></div>
+  </div>
   <div class="np-fail" id="fail"></div>
   <div class="np-empty" id="empty">
     <div class="big" id="emptyT"></div>
@@ -514,16 +517,21 @@ function dispRect(){return S.crop||{x:0,y:0,w:1,h:1};}
 function orientedSize(){return (S.rot%2===1)?{w:ih,h:iw}:{w:iw,h:ih};}
 function canvasCss(){return{w:glc.clientWidth||1,h:glc.clientHeight||1};}
 
-function effCanvas(){
-  const cv=canvasCss();
-  const pn=$("#panel");
-  if(innerWidth<=720&&pn&&getComputedStyle(pn).position==="absolute"){
-    const ph=pn.getBoundingClientRect().height||0;
-    const st=document.querySelector(".np-stage");
-    const sh=st?st.getBoundingClientRect().height:cv.h;
-    return{w:cv.w,h:Math.max(80,sh-ph)};
+function effCanvas(){return canvasCss();}
+/* size the view box (canvas + overlays) to the strip visible above the mobile drawer */
+function syncView(){
+  const vw=$("#view");if(!vw)return;
+  if(innerWidth<=720){
+    const pn=$("#panel");
+    if(pn&&getComputedStyle(pn).position==="absolute"){
+      const st=document.querySelector(".np-stage");
+      const sh=st?st.getBoundingClientRect().height:innerHeight;
+      const ph=pn.getBoundingClientRect().height||0;
+      vw.style.height=Math.max(80,sh-ph)+"px";
+      return;
+    }
   }
-  return cv;
+  vw.style.height="100%";
 }
 function fitView(){
   const D=dispRect(),os=orientedSize(),cv=effCanvas();
@@ -537,6 +545,7 @@ function fitView(){
 let rszT=0;
 function refitNow(){
   if(!srcImg)return;
+  syncView();
   const z=Math.max(fitFx/Math.max(view.fx,1e-9),1);
   const cx=view.cx,cy=view.cy;
   fitView();
@@ -675,7 +684,7 @@ function loadImage(img,name){
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
   resetAll();
   $("#empty").style.display="none";
-  fitView();render();histSoon();
+  syncView();fitView();render();histSoon();
   setTimeout(refitNow,180);
   toast(tf("loaded",{name:srcName}));
 }
@@ -1451,7 +1460,7 @@ function bindTop(){
 function bindDrawer(){
   const panel=$("#panel"),handle=$("#handle");
   let dragY=null,startH=0;
-  handle.addEventListener("click",()=>{if(dragMoved)return;panel.classList.toggle("full");refitLater();});
+  handle.addEventListener("click",()=>{if(dragMoved)return;panel.classList.toggle("full");syncView();refitLater();});
   let dragMoved=false;
   handle.addEventListener("pointerdown",e=>{dragMoved=false;dragY=e.clientY;startH=panel.getBoundingClientRect().height;handle.setPointerCapture(e.pointerId);});
   handle.addEventListener("pointermove",e=>{
@@ -1461,6 +1470,7 @@ function bindDrawer(){
     const h=Math.max(mh*.2,Math.min(mh*.9,startH+dy));
     panel.style.height=(h/mh*100)+"%";
     panel.classList.remove("full");
+    syncView();if(srcImg)render();
   });
   handle.addEventListener("pointerup",()=>{dragY=null;setTimeout(()=>dragMoved=false,50);refitLater();});
 }
@@ -1514,6 +1524,7 @@ function webglFallback(){
   bakeLuts();
   applyLang();
   bindTop();bindView();bindCrop();bindCropDrag();bindIO();bindDrawer();
+  syncView();
   window.addEventListener("resize",refitLater);
   if(window.visualViewport)window.visualViewport.addEventListener("resize",refitLater);
   if(!glOK)webglFallback();

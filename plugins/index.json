@@ -1,5 +1,5 @@
-{"plugins":[
-    {"id":"canvas","version":"1.0.0"},
-    {"id":"npalette","version":"1.0.1"}
+{"plugins": [
+    {"id": "npalette", "version": "1.0.0"},
+    {"id": "canvas", "version": "1.0.0"}
     ]
 }
