@@ -1,5 +1,5 @@
 <!--NP-META
-{"id": "npalette", "version": "1.0.1", "minCore": 1,
+{"id": "npalette", "version": "1.0.2", "minCore": 1,
  "title": {"zh": "N调色", "en": "N Palette", "de": "N Palette", "ru": "N Палитра", "ko": "N 팔레트", "fr": "N Palette", "es": "N Paleta"},
  "desc": {"zh": "专业调色台：影调、曲线、HSL、分离调色、裁剪与导出", "en": "Pro grading desk: tone, curves, HSL, split-tone, crop & export", "de": "Profigrading: Töne, Kurven, HSL, Split-Toning, Crop & Export", "ru": "Проф. грейдинг: тон, кривые, HSL, сплит-тон, кроп и экспорт", "ko": "프로 그레이딩: 톤, 커브, HSL, 스플릿 토닝, 크롭 및 내보내기", "fr": "Étalonnage pro : tons, courbes, HSL, ton séparé, recadrage, export", "es": "Gradación pro: tono, curvas, HSL, tono dividido, recorte y exportación"},
  "icon": "<svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 3a9 9 0 0 1 0 18\" fill=\"currentColor\" stroke=\"none\" opacity=\".35\"/><circle cx=\"9\" cy=\"10\" r=\"1.3\"/><circle cx=\"14.5\" cy=\"13\" r=\"1.3\"/><circle cx=\"10\" cy=\"15.5\" r=\"1\"/></svg>"}
@@ -502,8 +502,19 @@ function dispRect(){return S.crop||{x:0,y:0,w:1,h:1};}
 function orientedSize(){return (S.rot%2===1)?{w:ih,h:iw}:{w:iw,h:ih};}
 function canvasCss(){return{w:glc.clientWidth||1,h:glc.clientHeight||1};}
 
+function effCanvas(){
+  const cv=canvasCss();
+  const pn=$("#panel");
+  if(innerWidth<=720&&pn&&getComputedStyle(pn).position==="absolute"){
+    const ph=pn.getBoundingClientRect().height||0;
+    const st=document.querySelector(".np-stage");
+    const sh=st?st.getBoundingClientRect().height:cv.h;
+    return{w:cv.w,h:Math.max(80,sh-ph)};
+  }
+  return cv;
+}
 function fitView(){
-  const D=dispRect(),os=orientedSize(),cv=canvasCss();
+  const D=dispRect(),os=orientedSize(),cv=effCanvas();
   const A=(D.w*os.w)/(D.h*os.h);
   let fx=1,fy=fx*A*cv.h/cv.w;
   if(fy>1){fy=1;fx=fy*cv.w/(cv.h*Math.max(A,1e-6));}
@@ -511,6 +522,17 @@ function fitView(){
   view.cx=D.x+D.w/2;view.cy=D.y+D.h/2;view.fx=fx;view.fy=fy;
   updateStatus();
 }
+let rszT=0;
+function refitNow(){
+  if(!srcImg)return;
+  const z=Math.max(fitFx/Math.max(view.fx,1e-9),1);
+  const cx=view.cx,cy=view.cy;
+  fitView();
+  view.fx=fitFx/z;view.fy=view.fy/z;
+  view.cx=cx;view.cy=cy;
+  render();layoutCropIf();
+}
+function refitLater(){clearTimeout(rszT);rszT=setTimeout(refitNow,120);}
 
 function hsl2rgb(h,s,l){
   h=((h%360)+360)%360/360;
@@ -642,6 +664,7 @@ function loadImage(img,name){
   resetAll();
   $("#empty").style.display="none";
   fitView();render();histSoon();
+  setTimeout(refitNow,180);
   toast(tf("loaded",{name:srcName}));
 }
 function loadFile(file){
@@ -962,7 +985,7 @@ function cssToOriented(cx2,cy2){
 function zoomAt(cx2,cy2,f){
   const o=cssToOriented(cx2,cy2);
   view.fx/=f;view.fy/=f;
-  if(view.fx>fitFx){view.fy*=fitFx/view.fx;view.fx=fitFx;}
+  if(view.fx>8){view.fy*=8/view.fx;view.fx=8;}
   view.cx=o[0]-(cx2/canvasCss().w-.5)*view.fx;
   view.cy=o[1]-(.5-cy2/canvasCss().h)*view.fy;
   render();
@@ -1225,7 +1248,7 @@ function bindTop(){
 function bindDrawer(){
   const panel=$("#panel"),handle=$("#handle");
   let dragY=null,startH=0;
-  handle.addEventListener("click",()=>{if(dragMoved)return;panel.classList.toggle("full");});
+  handle.addEventListener("click",()=>{if(dragMoved)return;panel.classList.toggle("full");refitLater();});
   let dragMoved=false;
   handle.addEventListener("pointerdown",e=>{dragMoved=false;dragY=e.clientY;startH=panel.getBoundingClientRect().height;handle.setPointerCapture(e.pointerId);});
   handle.addEventListener("pointermove",e=>{
@@ -1236,7 +1259,7 @@ function bindDrawer(){
     panel.style.height=(h/mh*100)+"%";
     panel.classList.remove("full");
   });
-  handle.addEventListener("pointerup",()=>{dragY=null;setTimeout(()=>dragMoved=false,50);});
+  handle.addEventListener("pointerup",()=>{dragY=null;setTimeout(()=>dragMoved=false,50);refitLater();});
 }
 
 /* ================= i18n apply + boot ================= */
@@ -1287,16 +1310,6 @@ function webglFallback(){
   bakeLuts();
   applyLang();
   bindTop();bindView();bindCrop();bindCropDrag();bindIO();bindDrawer();
-  let rszT=0;
-  const refitLater=()=>{clearTimeout(rszT);rszT=setTimeout(()=>{
-    if(!srcImg)return;
-    const z=Math.max(fitFx/Math.max(view.fx,1e-9),1);
-    const cx=view.cx,cy=view.cy;
-    fitView();
-    view.fx=fitFx/z;view.fy=view.fy/z;
-    view.cx=cx;view.cy=cy;
-    render();layoutCropIf();
-  },120);};
   window.addEventListener("resize",refitLater);
   if(window.visualViewport)window.visualViewport.addEventListener("resize",refitLater);
   if(!glOK)webglFallback();
