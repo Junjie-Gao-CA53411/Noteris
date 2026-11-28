@@ -1,5 +1,5 @@
 <!--NP-META
-{"id": "npalette", "version": "1.0.2", "minCore": 1,
+{"id": "npalette", "version": "1.1.0", "minCore": 1,
  "title": {"zh": "N调色", "en": "N Palette", "de": "N Palette", "ru": "N Палитра", "ko": "N 팔레트", "fr": "N Palette", "es": "N Paleta"},
  "desc": {"zh": "专业调色台：影调、曲线、HSL、分离调色、裁剪与导出", "en": "Pro grading desk: tone, curves, HSL, split-tone, crop & export", "de": "Profigrading: Töne, Kurven, HSL, Split-Toning, Crop & Export", "ru": "Проф. грейдинг: тон, кривые, HSL, сплит-тон, кроп и экспорт", "ko": "프로 그레이딩: 톤, 커브, HSL, 스플릿 토닝, 크롭 및 내보내기", "fr": "Étalonnage pro : tons, courbes, HSL, ton séparé, recadrage, export", "es": "Gradación pro: tono, curvas, HSL, tono dividido, recorte y exportación"},
  "icon": "<svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 3a9 9 0 0 1 0 18\" fill=\"currentColor\" stroke=\"none\" opacity=\".35\"/><circle cx=\"9\" cy=\"10\" r=\"1.3\"/><circle cx=\"14.5\" cy=\"13\" r=\"1.3\"/><circle cx=\"10\" cy=\"15.5\" r=\"1\"/></svg>"}
@@ -47,6 +47,14 @@
 .np-hd{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--accent);border:2.5px solid #fff;box-sizing:border-box;touch-action:none;z-index:2}
 .np-cropbar{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 12px;z-index:7;flex-wrap:wrap;justify-content:center;max-width:94%}
 .np-cropbar select{background:var(--bg-2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 8px;font-size:12px}
+.np-modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.np-modal-box{width:100%;max-width:360px;max-height:70vh;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.np-modal-t{padding:12px 14px;font-size:13.5px;font-weight:700;border-bottom:1px solid var(--border-soft)}
+.np-modal-list{flex:1;min-height:80px;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:12.5px}
+.np-modal-item{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12.5px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.np-modal-item:hover{border-color:var(--accent);color:var(--accent)}
+.np-modal-f{padding:10px 12px;border-top:1px solid var(--border-soft);display:flex;justify-content:flex-end;gap:8px}
+.sch-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .np-drop{position:absolute;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);border:3px dashed var(--accent);border-radius:var(--r-md);margin:10px;color:var(--accent);font-size:16px;font-weight:700;pointer-events:none}
 .np-drop.on{display:flex}
 /* side / drawer panel */
@@ -120,6 +128,8 @@
 <div class="np-top">
   <span class="tt"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18" fill="currentColor" stroke="none" opacity=".35"/></svg><span id="npTitle">N调色</span></span>
   <button class="np-tbtn" id="bt-open" title=""><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0 4 4m-4-4-4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg><span class="lb" id="lb-open"></span></button>
+  <button class="np-tbtn" id="bt-clopen" title="Drive"><svg viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1 .9-8.9 5.5 5.5 0 0 1 10.7 1.6A4 4 0 0 1 18 18Z"/><path d="M12 11v6m0-6-2.2 2.2M12 11l2.2 2.2"/></svg></button>
+  <button class="np-tbtn" id="bt-exp" title="Export"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0 4 4m-4-4-4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></button>
   <button class="np-tbtn" id="bt-undo" disabled><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
   <button class="np-tbtn" id="bt-redo" disabled><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
   <button class="np-tbtn" id="bt-cmp"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14"/></svg><span class="lb" id="lb-cmp"></span></button>
@@ -163,6 +173,7 @@
     <div class="big" id="emptyT"></div>
     <div class="row">
       <button class="np-btn pri" id="em-open"></button>
+      <button class="np-btn" id="em-clopen"></button>
       <button class="np-btn" id="em-s1"></button>
       <button class="np-btn" id="em-s2"></button>
     </div>
@@ -174,7 +185,8 @@
     <div class="np-body" id="pbody"></div>
   </div>
 </div>
-<input type="file" id="file" accept="image/*" hidden>
+<input type="file" id="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif,.png,.jpg,.jpeg,.webp,.gif,.bmp,.avif" hidden>
+<input type="file" id="fileSch" accept=".json,application/json" hidden>
 <input type="file" id="file2" accept="image/*" hidden>
 <script>
 "use strict";
@@ -192,7 +204,7 @@ sharpen:"锐化",radius:"锐化半径",grain:"颗粒噪点",clip:"高光裁剪",
 ratioFree:"自由",apply:"应用",cancel:"取消",
 fmt:"格式",quality:"质量",size:"尺寸",sizeFull:"原始",expBtn:"导出图片",expFail:"导出失败：",tooBig:"图片超过设备纹理上限，已等比降档至 {w}×{h}",
 needImg:"请先打开一张图片",loaded:"已载入：{name}",cleared:"已重置全部调整",webglFail:"当前环境不支持 WebGL，只能查看原图，调色功能不可用。",
-clearDone:"",p1:"原图",p2:"复古",p3:"通透",p4:"黑白高对比",p5:"胶片感",p6:"清冷",p7:"暖阳",p8:"森系",p9:"暗夜",p10:"柔雾",p11:"浓郁",p12:"褪色系",p13:"美食",p14:"人像明亮",p15:"LOMO"},
+clearDone:"",p1:"原图",p2:"复古",p3:"通透",p4:"黑白高对比",p5:"胶片感",p6:"清冷",p7:"暖阳",p8:"森系",p9:"暗夜",p10:"柔雾",p11:"浓郁",p12:"褪色系",p13:"美食",p14:"人像明亮",p15:"LOMO",clOpen:"从云盘打开",expTop:"导出图片",expCloud:"保存到云盘",scheme:"调色方案",schExpLocal:"导出到本地",schExpCloud:"导出到云盘",schImpLocal:"从本地导入",schImpCloud:"从云盘导入",noGh:"请先在设置中配置 GitHub 同步，云盘功能不可用",badFile:"文件无效或已损坏",savedCloud:"已保存到云盘",noFiles:"云盘中没有可用文件",pickFile:"选择文件",cloudName:"文件名",loadWait:"正在从云盘读取…",ghErr:"云盘错误："},
 "en":{open:"Open image",drop:"Drop to open",emptyT:"Open an image to start grading",s1:"Sample: landscape",s2:"Sample: color chart",cmp:"Compare",crop:"Crop",handle:"Panel",
 tabTone:"Tone",tabCurve:"Curves",tabColor:"Color",tabHsl:"HSL",tabSplit:"Split",tabFx:"Effects",tabPreset:"Presets",tabExport:"Export",
 bright:"Brightness",contrast:"Contrast",exposure:"Exposure",gamma:"Gamma",highlight:"Highlights",shadow:"Shadows",white:"Whites",black:"Blacks",
@@ -204,7 +216,7 @@ sharpen:"Sharpen",radius:"Radius",grain:"Grain",clip:"Highlight clip",vig:"Vigne
 ratioFree:"Free",apply:"Apply",cancel:"Cancel",
 fmt:"Format",quality:"Quality",size:"Size",sizeFull:"Original",expBtn:"Export image",expFail:"Export failed: ",tooBig:"Image exceeds the GPU texture limit; scaled down to {w}×{h}",
 needImg:"Open an image first",loaded:"Loaded: {name}",cleared:"All adjustments reset",webglFail:"WebGL is unavailable here — you can view the image, but grading is disabled.",
-clearDone:"",p1:"Original",p2:"Vintage",p3:"Clear",p4:"B&W contrast",p5:"Film",p6:"Cool",p7:"Warm",p8:"Forest",p9:"Night",p10:"Mist",p11:"Rich",p12:"Faded",p13:"Food",p14:"Portrait",p15:"LOMO"},
+clearDone:"",p1:"Original",p2:"Vintage",p3:"Clear",p4:"B&W contrast",p5:"Film",p6:"Cool",p7:"Warm",p8:"Forest",p9:"Night",p10:"Mist",p11:"Rich",p12:"Faded",p13:"Food",p14:"Portrait",p15:"LOMO",clOpen:"Open from drive",expTop:"Export image",expCloud:"Save to drive",scheme:"Grade recipe",schExpLocal:"Export to device",schExpCloud:"Export to drive",schImpLocal:"Import from device",schImpCloud:"Import from drive",noGh:"Configure GitHub sync in Settings first to use the drive",badFile:"Invalid or corrupted file",savedCloud:"Saved to drive",noFiles:"No files available in the drive",pickFile:"Pick a file",cloudName:"File name",loadWait:"Reading from drive…",ghErr:"Drive error: "},
 "de":{open:"Bild öffnen",drop:"Loslassen zum Öffnen",emptyT:"Bild öffnen und loslegen",s1:"Beispiel: Landschaft",s2:"Beispiel: Farbkarte",cmp:"Vergleich",crop:"Zuschneiden",handle:"Panel",
 tabTone:"Töne",tabCurve:"Kurven",tabColor:"Farbe",tabHsl:"HSL",tabSplit:"Split",tabFx:"Effekte",tabPreset:"Presets",tabExport:"Export",
 bright:"Helligkeit",contrast:"Kontrast",exposure:"Belichtung",gamma:"Gamma",highlight:"Lichter",shadow:"Schatten",white:"Weiß",black:"Schwarz",
@@ -216,7 +228,7 @@ sharpen:"Schärfe",radius:"Radius",grain:"Korn",clip:"Lichter abschneiden",vig:"
 ratioFree:"Frei",apply:"Anwenden",cancel:"Abbrechen",
 fmt:"Format",quality:"Qualität",size:"Größe",sizeFull:"Original",expBtn:"Bild exportieren",expFail:"Export fehlgeschlagen: ",tooBig:"Bild überschreitet die Texturgrenze; verkleinert auf {w}×{h}",
 needImg:"Bitte zuerst ein Bild öffnen",loaded:"Geladen: {name}",cleared:"Alle Anpassungen zurückgesetzt",webglFail:"WebGL nicht verfügbar — Bildansicht ist möglich, Grading deaktiviert.",
-clearDone:"",p1:"Original",p2:"Retro",p3:"Klar",p4:"SW-Kontrast",p5:"Film",p6:"Kühl",p7:"Warm",p8:"Wald",p9:"Nacht",p10:"Nebel",p11:"Kräftig",p12:"Blass",p13:"Food",p14:"Porträt",p15:"LOMO"},
+clearDone:"",p1:"Original",p2:"Retro",p3:"Klar",p4:"SW-Kontrast",p5:"Film",p6:"Kühl",p7:"Warm",p8:"Wald",p9:"Nacht",p10:"Nebel",p11:"Kräftig",p12:"Blass",p13:"Food",p14:"Porträt",p15:"LOMO",clOpen:"Aus Cloud öffnen",expTop:"Bild exportieren",expCloud:"In Cloud speichern",scheme:"Farbrezept",schExpLocal:"Lokal exportieren",schExpCloud:"In Cloud exportieren",schImpLocal:"Lokal importieren",schImpCloud:"Aus Cloud importieren",noGh:"Richte zuerst die GitHub-Synchronisation in den Einstellungen ein",badFile:"Datei ungültig oder beschädigt",savedCloud:"In Cloud gespeichert",noFiles:"Keine Dateien in der Cloud",pickFile:"Datei wählen",cloudName:"Dateiname",loadWait:"Wird aus der Cloud gelesen…",ghErr:"Cloud-Fehler: "},
 "ru":{open:"Открыть",drop:"Отпустите, чтобы открыть",emptyT:"Откройте изображение",s1:"Пример: пейзаж",s2:"Пример: карта цветов",cmp:"Сравнение",crop:"Кроп",handle:"Панель",
 tabTone:"Тон",tabCurve:"Кривые",tabColor:"Цвет",tabHsl:"HSL",tabSplit:"Сплит",tabFx:"Эффекты",tabPreset:"Пресеты",tabExport:"Экспорт",
 bright:"Яркость",contrast:"Контраст",exposure:"Экспозиция",gamma:"Гамма",highlight:"Света",shadow:"Тени",white:"Белое",black:"Чёрное",
@@ -228,7 +240,7 @@ sharpen:"Резкость",radius:"Радиус",grain:"Зерно",clip:"Обр
 ratioFree:"Свободно",apply:"Применить",cancel:"Отмена",
 fmt:"Формат",quality:"Качество",size:"Размер",sizeFull:"Оригинал",expBtn:"Экспорт",expFail:"Ошибка экспорта: ",tooBig:"Изображение превышает лимит текстур; уменьшено до {w}×{h}",
 needImg:"Сначала откройте изображение",loaded:"Загружено: {name}",cleared:"Все правки сброшены",webglFail:"WebGL недоступен — только просмотр, грейдинг отключён.",
-clearDone:"",p1:"Оригинал",p2:"Винтаж",p3:"Чёткий",p4:"ЧБ контраст",p5:"Плёнка",p6:"Холодный",p7:"Тёплый",p8:"Лес",p9:"Ночь",p10:"Туман",p11:"Насыщ.",p12:"Выцветший",p13:"Еда",p14:"Портрет",p15:"LOMO"},
+clearDone:"",p1:"Оригинал",p2:"Винтаж",p3:"Чёткий",p4:"ЧБ контраст",p5:"Плёнка",p6:"Холодный",p7:"Тёплый",p8:"Лес",p9:"Ночь",p10:"Туман",p11:"Насыщ.",p12:"Выцветший",p13:"Еда",p14:"Портрет",p15:"LOMO",clOpen:"Открыть с диска",expTop:"Экспорт изображения",expCloud:"Сохранить на диск",scheme:"Рецепт обработки",schExpLocal:"Экспорт на устройство",schExpCloud:"Экспорт на диск",schImpLocal:"Импорт с устройства",schImpCloud:"Импорт с диска",noGh:"Сначала настройте синхронизацию GitHub в настройках",badFile:"Файл недействителен или повреждён",savedCloud:"Сохранено на диск",noFiles:"В диске нет доступных файлов",pickFile:"Выберите файл",cloudName:"Имя файла",loadWait:"Чтение с диска…",ghErr:"Ошибка диска: "},
 "ko":{open:"이미지 열기",drop:"놓아서 열기",emptyT:"이미지를 열어 색보정 시작",s1:"샘플: 풍경",s2:"샘플: 색상표",cmp:"비교",crop:"자르기",handle:"패널",
 tabTone:"톤",tabCurve:"커브",tabColor:"색상",tabHsl:"HSL",tabSplit:"분리",tabFx:"효과",tabPreset:"프리셋",tabExport:"내보내기",
 bright:"밝기",contrast:"대비",exposure:"노출",gamma:"감마",highlight:"하이라이트",shadow:"섀도우",white:"화이트",black:"블랙",
@@ -240,7 +252,7 @@ sharpen:"선명도",radius:"반경",grain:"그레인",clip:"하이라이트 클�
 ratioFree:"자유",apply:"적용",cancel:"취소",
 fmt:"형식",quality:"품질",size:"크기",sizeFull:"원본",expBtn:"이미지 내보내기",expFail:"내보내기 실패: ",tooBig:"텍스처 한계를 초과하여 {w}×{h}로 축소되었습니다",
 needImg:"먼저 이미지를 열어 주세요",loaded:"불러옴: {name}",cleared:"모든 조정이 초기화되었습니다",webglFail:"WebGL을 사용할 수 없어 원본 보기만 가능합니다.",
-clearDone:"",p1:"원본",p2:"레트로",p3:"선명",p4:"흑백 대비",p5:"필름",p6:"차가운",p7:"따뜻한",p8:"숲속",p9:"밤",p10:"안개",p11:"진하게",p12:"빛바랜",p13:"음식",p14:"인물",p15:"LOMO"},
+clearDone:"",p1:"원본",p2:"레트로",p3:"선명",p4:"흑백 대비",p5:"필름",p6:"차가운",p7:"따뜻한",p8:"숲속",p9:"밤",p10:"안개",p11:"진하게",p12:"빛바랜",p13:"음식",p14:"인물",p15:"LOMO",clOpen:"클라우드에서 열기",expTop:"이미지 내보내기",expCloud:"클라우드에 저장",scheme:"보정 도안",schExpLocal:"로컬로 내보내기",schExpCloud:"클라우드로 내보내기",schImpLocal:"로컬에서 가져오기",schImpCloud:"클라우드에서 가져오기",noGh:"클라우드 기능을 사용하려면 먼저 설정에서 GitHub 동기화를 구성하세요",badFile:"파일이 유효하지 않거나 손상됨",savedCloud:"클라우드에 저장됨",noFiles:"클라우드에 사용 가능한 파일이 없음",pickFile:"파일 선택",cloudName:"파일 이름",loadWait:"클라우드에서 읽는 중…",ghErr:"클라우드 오류: "},
 "fr":{open:"Ouvrir",drop:"Relâcher pour ouvrir",emptyT:"Ouvrez une image pour commencer",s1:"Échantillon : paysage",s2:"Échantillon : nuancier",cmp:"Comparer",crop:"Recadrer",handle:"Panneau",
 tabTone:"Tons",tabCurve:"Courbes",tabColor:"Couleur",tabHsl:"HSL",tabSplit:"Séparation",tabFx:"Effets",tabPreset:"Préréglages",tabExport:"Exporter",
 bright:"Luminosité",contrast:"Contraste",exposure:"Exposition",gamma:"Gamma",highlight:"Hautes lumières",shadow:"Ombres",white:"Blancs",black:"Noirs",
@@ -252,7 +264,7 @@ sharpen:"Netteté",radius:"Rayon",grain:"Grain",clip:"Coupure hautes lumières",
 ratioFree:"Libre",apply:"Appliquer",cancel:"Annuler",
 fmt:"Format",quality:"Qualité",size:"Taille",sizeFull:"Original",expBtn:"Exporter l'image",expFail:"Échec de l'export : ",tooBig:"Image au-delà de la limite GPU ; réduite à {w}×{h}",
 needImg:"Ouvrez d'abord une image",loaded:"Chargé : {name}",cleared:"Réglages réinitialisés",webglFail:"WebGL indisponible — vue seule, étalonnage désactivé.",
-clearDone:"",p1:"Original",p2:"Vintage",p3:"Net",p4:"N&B contraste",p5:"Pellicule",p6:"Frais",p7:"Chaud",p8:"Forêt",p9:"Nuit",p10:"Brume",p11:"Riche",p12:"Délavé",p13:"Cuisine",p14:"Portrait",p15:"LOMO"},
+clearDone:"",p1:"Original",p2:"Vintage",p3:"Net",p4:"N&B contraste",p5:"Pellicule",p6:"Frais",p7:"Chaud",p8:"Forêt",p9:"Nuit",p10:"Brume",p11:"Riche",p12:"Délavé",p13:"Cuisine",p14:"Portrait",p15:"LOMO",clOpen:"Ouvrir du cloud",expTop:"Exporter l'image",expCloud:"Enregistrer dans le cloud",scheme:"Recette d'étalonnage",schExpLocal:"Exporter localement",schExpCloud:"Exporter vers le cloud",schImpLocal:"Importer localement",schImpCloud:"Importer du cloud",noGh:"Configure d'abord la synchronisation GitHub dans les paramètres",badFile:"Fichier invalide ou corrompu",savedCloud:"Enregistré dans le cloud",noFiles:"Aucun fichier disponible dans le cloud",pickFile:"Choisir un fichier",cloudName:"Nom du fichier",loadWait:"Lecture depuis le cloud…",ghErr:"Erreur cloud : "},
 "es":{open:"Abrir imagen",drop:"Suelta para abrir",emptyT:"Abre una imagen para empezar",s1:"Muestra: paisaje",s2:"Muestra: carta de color",cmp:"Comparar",crop:"Recortar",handle:"Panel",
 tabTone:"Tono",tabCurve:"Curvas",tabColor:"Color",tabHsl:"HSL",tabSplit:"Separación",tabFx:"Efectos",tabPreset:"Preajustes",tabExport:"Exportar",
 bright:"Brillo",contrast:"Contraste",exposure:"Exposición",gamma:"Gamma",highlight:"Luces",shadow:"Sombras",white:"Blancos",black:"Negros",
@@ -264,7 +276,7 @@ sharpen:"Nitidez",radius:"Radio",grain:"Grano",clip:"Corte de luces",vig:"Viñet
 ratioFree:"Libre",apply:"Aplicar",cancel:"Cancelar",
 fmt:"Formato",quality:"Calidad",size:"Tamaño",sizeFull:"Original",expBtn:"Exportar imagen",expFail:"Error al exportar: ",tooBig:"Imagen supera el límite GPU; reducida a {w}×{h}",
 needImg:"Abre primero una imagen",loaded:"Cargada: {name}",cleared:"Ajustes restablecidos",webglFail:"WebGL no disponible — solo vista, gradación desactivada.",
-clearDone:"",p1:"Original",p2:"Vintage",p3:"Nítido",p4:"ByN contraste",p5:"Película",p6:"Frío",p7:"Cálido",p8:"Bosque",p9:"Noche",p10:"Niebla",p11:"Intenso",p12:"Desvanecido",p13:"Comida",p14:"Retrato",p15:"LOMO"}
+clearDone:"",p1:"Original",p2:"Vintage",p3:"Nítido",p4:"ByN contraste",p5:"Película",p6:"Frío",p7:"Cálido",p8:"Bosque",p9:"Noche",p10:"Niebla",p11:"Intenso",p12:"Desvanecido",p13:"Comida",p14:"Retrato",p15:"LOMO",clOpen:"Abrir desde la nube",expTop:"Exportar imagen",expCloud:"Guardar en la nube",scheme:"Receta de ajuste",schExpLocal:"Exportar al dispositivo",schExpCloud:"Exportar a la nube",schImpLocal:"Importar del dispositivo",schImpCloud:"Importar de la nube",noGh:"Configura primero la sincronización con GitHub en Ajustes",badFile:"Archivo inválido o dañado",savedCloud:"Guardado en la nube",noFiles:"No hay archivos disponibles en la nube",pickFile:"Elegir un archivo",cloudName:"Nombre del archivo",loadWait:"Leyendo de la nube…",ghErr:"Error de nube: "}
 };
 let L="zh";
 const $=s=>document.querySelector(s);
@@ -668,58 +680,228 @@ function loadImage(img,name){
   toast(tf("loaded",{name:srcName}));
 }
 function loadFile(file){
-  if(!file||file.type.indexOf("image/")!==0){toast(t("needImg"),true);return;}
+  if(!file)return;
+  const okType=(file.type||"").indexOf("image/")===0;
+  const okExt=/\.(png|jpe?g|webp|gif|bmp|avif)$/i.test(file.name||"");
+  if(!okType&&!okExt){toast(t("needImg"),true);return;}
   const rd=new FileReader();
-  rd.onload=()=>{const img=new Image();img.onload=()=>loadImage(img,file.name);img.src=rd.result;};
+  rd.onload=()=>{const img=new Image();img.onload=()=>loadImage(img,file.name);img.onerror=()=>toast(t("badFile"),true);img.src=rd.result;};
   rd.readAsDataURL(file);
 }
 
 /* ================= export ================= */
 const EXP={fmt:"png",quality:92,size:1};
-function exportImage(){
+function fmtMime(f){return f==="png"?"image/png":f==="jpeg"?"image/jpeg":f==="avif"?"image/avif":"image/webp";}
+const AVIF_OK=(()=>{try{return document.createElement("canvas").toDataURL("image/avif").indexOf("image/avif")===0;}catch(_){return false;}})();
+function renderExportB64(){
+  return new Promise((res,rej)=>{
+    const D=dispRect(),os=orientedSize();
+    let W=Math.max(1,Math.round(D.w*os.w*EXP.size));
+    let H=Math.max(1,Math.round(D.h*os.h*EXP.size));
+    let note="";
+    const mx=Math.max(W,H);
+    if(mx>maxTex){const k=maxTex/mx;W=Math.round(W*k);H=Math.round(H*k);note=tf("tooBig",{w:W,h:H});}
+    gl.bindFramebuffer(gl.FRAMEBUFFER,histFBO);
+    gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,histTexG);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,histTexG,0);
+    gl.viewport(0,0,W,H);
+    const ov={...view};
+    view.cx=D.x+D.w/2;view.cy=D.y+D.h/2;view.fx=D.w;view.fy=D.h;
+    uploadUniforms(W,H);
+    gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,srcTex);
+    gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,lutTex);
+    gl.drawArrays(gl.TRIANGLES,0,3);
+    const px=new Uint8Array(W*H*4);
+    gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,px);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    Object.assign(view,ov);render();
+    const cv=document.createElement("canvas");cv.width=W;cv.height=H;
+    const cx2=cv.getContext("2d");
+    const img=cx2.createImageData(W,H);
+    for(let y=0;y<H;y++){img.data.set(px.subarray((H-1-y)*W*4,(H-y)*W*4),y*W*4);}
+    cx2.putImageData(img,0,0);
+    cv.toBlob(blob=>{
+      if(!blob){rej(new Error("toBlob"));return;}
+      const rd=new FileReader();
+      rd.onload=()=>res({b64:String(rd.result).split(",")[1],W,H,note});
+      rd.readAsDataURL(blob);
+    },fmtMime(EXP.fmt),EXP.quality/100);
+  });
+}
+async function exportImage(){
   if(!srcImg){toast(t("needImg"),true);return;}
-  const D=dispRect(),os=orientedSize();
-  let W=Math.max(1,Math.round(D.w*os.w*EXP.size));
-  let H=Math.max(1,Math.round(D.h*os.h*EXP.size));
-  let note="";
-  const mx=Math.max(W,H);
-  if(mx>maxTex){const k=maxTex/mx;W=Math.round(W*k);H=Math.round(H*k);note=tf("tooBig",{w:W,h:H});}
-  gl.bindFramebuffer(gl.FRAMEBUFFER,histFBO);
-  gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,histTexG);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,histTexG,0);
-  gl.viewport(0,0,W,H);
-  const ov={...view};
-  view.cx=D.x+D.w/2;view.cy=D.y+D.h/2;view.fx=D.w;view.fy=D.h;
-  uploadUniforms(W,H);
-  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,srcTex);
-  gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,lutTex);
-  gl.drawArrays(gl.TRIANGLES,0,3);
-  const px=new Uint8Array(W*H*4);
-  gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,px);
-  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-  Object.assign(view,ov);render();
-  const cv=document.createElement("canvas");cv.width=W;cv.height=H;
-  const cx2=cv.getContext("2d");
-  const img=cx2.createImageData(W,H);
-  for(let y=0;y<H;y++){img.data.set(px.subarray((H-1-y)*W*4,(H-y)*W*4),y*W*4);}
-  cx2.putImageData(img,0,0);
-  const mime=EXP.fmt==="png"?"image/png":EXP.fmt==="jpeg"?"image/jpeg":"image/webp";
-  cv.toBlob(blob=>{
-    if(!blob){toast(t("expFail")+"toBlob",true);return;}
-    const rd=new FileReader();
-    rd.onload=async()=>{
-      const base64=String(rd.result).split(",")[1];
-      const dot=srcName.lastIndexOf(".");
-      const stem=dot>0?srcName.slice(0,dot):srcName;
-      try{await np.call("saveFile",{name:stem+"-edited."+(EXP.fmt==="jpeg"?"jpg":EXP.fmt),base64});
-        toast(note?note:tf("loaded",{name:stem+"-edited."+EXP.fmt}));
-        if(note)toast(note);
-        $("#expMsg").textContent=(note?note+" · ":"")+W+"×"+H;
-      }catch(e){toast(t("expFail")+(e.message||""),true);}
-    };
-    rd.readAsDataURL(blob);
-  },mime,EXP.quality/100);
+  try{
+    const {b64,W,H,note}=await renderExportB64();
+    const dot=srcName.lastIndexOf(".");
+    const stem=dot>0?srcName.slice(0,dot):srcName;
+    const ext=EXP.fmt==="jpeg"?"jpg":EXP.fmt;
+    await np.call("saveFile",{name:stem+"-edited."+ext,base64:b64});
+    toast(tf("loaded",{name:stem+"-edited."+ext}));
+    if(note)toast(note);
+    const em=$("#expMsg");if(em)em.textContent=(note?note+" · ":"")+W+"×"+H;
+  }catch(e){toast(t("expFail")+(e.message||""),true);}
+}
+
+/* ================= cloud drive bridge (via host ghFetch) ================= */
+let GH=null; // {repo,branch,root} from getEnv
+function drivePrefix(){return GH?(GH.root?GH.root+"/drive/":"drive/"):null;}
+async function gj(path,method,body){
+  const r=await np.call("ghFetch",{path:path,method:method,body:body});
+  return r.data;
+}
+async function driveList(){
+  const pfx=drivePrefix();
+  const tree=await gj("/repos/"+GH.repo+"/git/trees/"+encodeURIComponent(GH.branch)+"?recursive=1");
+  if(!tree||!Array.isArray(tree.tree))return [];
+  return tree.tree.filter(x=>x.type==="blob"&&x.path.indexOf(pfx)===0)
+    .map(x=>({name:x.path.slice(pfx.length),path:x.path,sha:x.sha}));
+}
+async function driveRead(path){
+  const j=await gj("/repos/"+GH.repo+"/contents/"+encodeURI(path)+"?ref="+encodeURIComponent(GH.branch));
+  if(!j||!j.content)throw new Error("404");
+  return {b64:j.content.replace(/\s/g,""),sha:j.sha};
+}
+async function driveWrite(path,b64,msg){
+  let sha=null;
+  try{const cur=await gj("/repos/"+GH.repo+"/contents/"+encodeURI(path)+"?ref="+encodeURIComponent(GH.branch));
+    if(cur&&cur.sha)sha=cur.sha;
+  }catch(_){}
+  const body={message:msg||("npalette: "+path),content:b64,branch:GH.branch};
+  if(sha)body.sha=sha;
+  await gj("/repos/"+GH.repo+"/contents/"+encodeURI(path),"PUT",body);
+}
+function u8ToB64(u8){
+  let bin="",CH=0x8000;
+  for(let i=0;i<u8.length;i+=CH)bin+=String.fromCharCode.apply(null,u8.subarray(i,i+CH));
+  return btoa(bin);
+}
+function b64ToU8(b){
+  const s=atob(b);const u=new Uint8Array(s.length);
+  for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);
+  return u;
+}
+const IMG_EXT=[".png",".jpg",".jpeg",".webp",".gif",".bmp",".avif"];
+/* modal cloud file picker; resolve {name,path} or null */
+function cloudPicker(title,exts){
+  return new Promise(resolve=>{
+    if(!GH){toast(t("noGh"),true);resolve(null);return;}
+    const wrap=document.createElement("div");wrap.className="np-modal";
+    const box=document.createElement("div");box.className="np-modal-box";
+    const hd=document.createElement("div");hd.className="np-modal-t";hd.textContent=title;
+    const list=document.createElement("div");list.className="np-modal-list";list.textContent=t("loadWait");
+    const ft=document.createElement("div");ft.className="np-modal-f";
+    const cc=document.createElement("button");cc.className="np-btn sm";cc.textContent=t("cancel");
+    ft.appendChild(cc);
+    box.append(hd,list,ft);wrap.appendChild(box);document.body.appendChild(wrap);
+    const close=v=>{wrap.remove();resolve(v);};
+    cc.onclick=()=>close(null);
+    wrap.addEventListener("pointerdown",e=>{if(e.target===wrap)close(null);});
+    driveList().then(files=>{
+      const hit=files.filter(f=>exts.some(e=>f.name.toLowerCase().slice(-e.length)===e));
+      list.innerHTML="";
+      if(!hit.length){list.textContent=t("noFiles");return;}
+      hit.slice(0,300).forEach(f=>{
+        const b=document.createElement("button");
+        b.className="np-modal-item";
+        b.textContent=f.name;
+        b.onclick=()=>close(f);
+        list.appendChild(b);
+      });
+    }).catch(e=>{list.textContent=t("ghErr")+(e&&e.message||"");});
+  });
+}
+
+/* ================= grade recipe (scheme) import / export ================= */
+function schemePayload(){
+  return {app:"npalette",kind:"grade",v:1,when:Date.now(),src:srcName,
+    tone:S.tone,curves:S.curves,color:S.color,hsl:S.hsl,split:S.split,fx:S.fx,
+    rot:S.rot,flipX:S.flipX,flipY:S.flipY};
+}
+function schemeStem(){const d=srcName.lastIndexOf(".");return (d>0?srcName.slice(0,d):srcName)||"grade";}
+function applyScheme(j){
+  if(!j||j.app!=="npalette"||!j.tone||!j.color)throw new Error(t("badFile"));
+  pushHist();
+  ["tone","color","hsl","split","fx"].forEach(k=>{if(j[k])S[k]=Object.assign({},S[k],clone(j[k]));});
+  if(j.curves&&j.curves.L&&j.curves.R&&j.curves.G&&j.curves.B)S.curves=clone(j.curves);
+  if(typeof j.rot==="number")S.rot=((j.rot%4)+4)%4;
+  if(j.flipX!=null)S.flipX=j.flipX?1:0;
+  if(j.flipY!=null)S.flipY=j.flipY?1:0;
+  curPreset=-1;
+  bakeLuts();refreshUI();syncHistBtns();fitView();render();histSoon();
+  toast(t("loaded").replace("{name}",j.src||"scheme"));
+}
+async function exportSchemeLocal(){
+  const data=new TextEncoder().encode(JSON.stringify(schemePayload()));
+  try{
+    await np.call("saveFile",{name:schemeStem()+".np.json",base64:u8ToB64(data)});
+    toast(tf("loaded",{name:schemeStem()+".np.json"}));
+  }catch(e){toast(t("expFail")+(e.message||""),true);}
+}
+async function exportSchemeCloud(){
+  if(!GH){toast(t("noGh"),true);return;}
+  let name;
+  try{name=await np.call("prompt",{title:t("schExpCloud"),msg:t("cloudName"),value:schemeStem()+".np.json"});}
+  catch(_){return;}
+  if(!name)return;
+  name=String(name).replace(/^\/+/,"");
+  if(name.indexOf("/")<0)name="npalette/"+name;
+  try{
+    const data=new TextEncoder().encode(JSON.stringify(schemePayload()));
+    await driveWrite(drivePrefix()+name,u8ToB64(data),"npalette: export scheme");
+    toast(t("savedCloud"));
+  }catch(e){toast(t("ghErr")+(e.message||""),true);}
+}
+function importSchemeFile(file){
+  if(!file)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{applyScheme(JSON.parse(String(rd.result)));}
+    catch(e){toast(t("badFile"),true);}
+  };
+  rd.readAsText(file);
+}
+async function importSchemeCloud(){
+  const f=await cloudPicker(t("schImpCloud"),[".json"]);
+  if(!f)return;
+  try{
+    const {b64}=await driveRead(f.path);
+    applyScheme(JSON.parse(new TextDecoder().decode(b64ToU8(b64))));
+  }catch(e){toast(t("badFile"),true);}
+}
+
+/* ================= cloud: open image / save image ================= */
+async function cloudOpenImage(){
+  if(!GH){toast(t("noGh"),true);return;}
+  const f=await cloudPicker(t("clOpen"),IMG_EXT);
+  if(!f)return;
+  try{
+    toast(t("loadWait"));
+    const {b64}=await driveRead(f.path);
+    const url=URL.createObjectURL(new Blob([b64ToU8(b64)]));
+    const img=new Image();
+    img.onload=()=>{URL.revokeObjectURL(url);loadImage(img,f.name);};
+    img.onerror=()=>{URL.revokeObjectURL(url);toast(t("badFile"),true);};
+    img.src=url;
+  }catch(e){toast(t("ghErr")+(e.message||""),true);}
+}
+async function cloudSaveImage(){
+  if(!srcImg){toast(t("needImg"),true);return;}
+  if(!GH){toast(t("noGh"),true);return;}
+  const dot=srcName.lastIndexOf(".");
+  const stem=dot>0?srcName.slice(0,dot):srcName;
+  const def=stem+"-edited."+(EXP.fmt==="jpeg"?"jpg":EXP.fmt);
+  let name;
+  try{name=await np.call("prompt",{title:t("expCloud"),msg:t("cloudName"),value:def});}
+  catch(_){return;}
+  if(!name)return;
+  name=String(name).replace(/^\/+/,"");
+  try{
+    toast(t("loadWait"));
+    const b64=await renderExportB64();
+    await driveWrite(drivePrefix()+name,b64,"npalette: export image");
+    toast(t("savedCloud"));
+  }catch(e){toast(t("ghErr")+(e.message||""),true);}
 }
 
 /* ================= UI: sliders ================= */
@@ -850,7 +1032,9 @@ function buildExportUI(bd){
     });
     d.appendChild(sg);return d;
   };
-  bd.appendChild(mkSeg([["png","PNG"],["jpeg","JPEG"],["webp","WebP"]],()=>EXP.fmt,v=>EXP.fmt=v,t("fmt")));
+  const fmts=[["png","PNG"],["jpeg","JPEG"],["webp","WebP"]];
+  if(AVIF_OK)fmts.push(["avif","AVIF"]);
+  bd.appendChild(mkSeg(fmts,()=>EXP.fmt,v=>EXP.fmt=v,t("fmt")));
   if(EXP.fmt!=="png"){
     const q=document.createElement("div");q.className="np-sec";
     const tt=document.createElement("div");tt.className="np-sec-t";tt.textContent=t("quality");q.appendChild(tt);
@@ -860,10 +1044,24 @@ function buildExportUI(bd){
   bd.appendChild(mkSeg([[1,t("sizeFull")],[.75,"75%"],[.5,"50%"],[.25,"25%"]],()=>EXP.size,v=>EXP.size=v,t("size")));
   const btn=document.createElement("button");btn.className="np-btn pri exp-big";btn.textContent=t("expBtn");
   btn.onclick=exportImage;
+  const btnC=document.createElement("button");btnC.className="np-btn exp-cloudbtn";btnC.textContent=t("expCloud");
+  btnC.onclick=cloudSaveImage;
   const msg=document.createElement("div");msg.className="exp-msg";msg.id="expMsg";
   const note=document.createElement("div");note.className="exp-note";
   note.textContent="-edited · "+t("sizeFull");
-  bd.append(btn,msg,note);
+  bd.append(btn,btnC,msg,note);
+  // ---- grade recipe (scheme) import / export ----
+  const sd=document.createElement("div");sd.className="np-sec";
+  const stt=document.createElement("div");stt.className="np-sec-t";stt.textContent=t("scheme");sd.appendChild(stt);
+  const grid=document.createElement("div");grid.className="sch-grid";
+  const mkB=(lab,fn,pri)=>{const b=document.createElement("button");b.className="np-btn sm"+(pri?" pri":"");b.textContent=lab;b.onclick=fn;return b;};
+  grid.append(
+    mkB(t("schExpLocal"),exportSchemeLocal,true),
+    mkB(t("schExpCloud"),exportSchemeCloud),
+    mkB(t("schImpLocal"),()=>$("#fileSch").click()),
+    mkB(t("schImpCloud"),importSchemeCloud)
+  );
+  sd.appendChild(grid);bd.appendChild(sd);
 }
 
 /* ================= curves editor ================= */
@@ -1208,7 +1406,12 @@ function loadSample(n){
 function bindIO(){
   const open=()=>{if(!glOK)return;$("#file").click();};
   $("#bt-open").onclick=open;$("#em-open").onclick=open;
+  const cl=$("#bt-clopen");if(cl)cl.onclick=()=>{if(!glOK)return;cloudOpenImage();};
+  const ecl=$("#em-clopen");if(ecl)ecl.onclick=()=>{if(!glOK)return;cloudOpenImage();};
+  const bexp=$("#bt-exp");if(bexp)bexp.onclick=()=>{if(!glOK)return;exportImage();};
   $("#file").addEventListener("change",e=>{loadFile(e.target.files[0]);e.target.value="";});
+  const fs=$("#fileSch");
+  if(fs)fs.addEventListener("change",e=>{importSchemeFile(e.target.files[0]);e.target.value="";});
   const veil=$("#dropVeil");
   let depth=0;
   window.addEventListener("dragenter",e=>{e.preventDefault();depth++;veil.classList.add("on");veil.textContent=t("drop");});
@@ -1265,7 +1468,7 @@ function bindDrawer(){
 /* ================= i18n apply + boot ================= */
 function applyLang(){
   document.documentElement.lang=L;
-  const map={"lb-open":"open","lb-cmp":"cmp","lb-crop":"crop","emptyT":"emptyT","em-open":"open","em-s1":"s1","em-s2":"s2","cropApply":"apply","cropCancel":"cancel"};
+  const map={"lb-open":"open","lb-cmp":"cmp","lb-crop":"crop","emptyT":"emptyT","em-open":"open","em-clopen":"clOpen","em-s1":"s1","em-s2":"s2","cropApply":"apply","cropCancel":"cancel"};
   for(const id in map){const e=document.getElementById(id);if(e)e.textContent=t(map[id]);}
   $("#npTitle").textContent=t("tabColor")==="Color"?"N Palette":"N调色";
   $("#handle").setAttribute("aria-label",t("handle"));
@@ -1306,6 +1509,7 @@ function webglFallback(){
   let env={lang:"zh"};
   try{env=await np.call("getEnv");}catch(_){}
   L=(env.lang&&I18N[env.lang])?env.lang:"zh";
+  GH=env.gh||null;
   glOK=initGL();
   bakeLuts();
   applyLang();
@@ -1315,6 +1519,7 @@ function webglFallback(){
   if(!glOK)webglFallback();
 })();
 function layoutCropIf(){if($("#cropUI").classList.contains("on"))layoutCrop();}
+
 </script>
 </body>
 </html>
